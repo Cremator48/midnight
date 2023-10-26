@@ -1,3 +1,3 @@
 all:
-	g++ hello.cpp -o hello
+	clang++ hello.cpp -o hello.exe
 	
