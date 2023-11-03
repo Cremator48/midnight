@@ -31,15 +31,9 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // Раскомментируйте данную часть кода, если используете macOS
-    /*
-    #ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif
-    */
 
     // glfw: создание окна
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL for Ravesli.com", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -56,6 +50,7 @@ int main()
         return -1;
     }
 
+
     // Компилирование нашей шейдерной программы
 
     // Вершинный шейдер
@@ -63,7 +58,7 @@ int main()
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
 
-    // Проверка на наличие ошибок компилирования вершинного шейдера
+    // Проверка на наличие ошибок компилирования шейдера
     int success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -78,7 +73,7 @@ int main()
     glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
     glCompileShader(fragmentShader);
 
-    // Проверка на наличие ошибок компилирования фрагментного шейдера
+    // Проверка на наличие ошибок компилирования шейдера
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
@@ -92,7 +87,7 @@ int main()
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    // Проверка на наличие ошибок компилирования связывания шейдеров
+    // Проверка на наличие ошибок связывания шейдеров
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
@@ -103,14 +98,19 @@ int main()
 
     // Указывание вершин (и буферов) и настройка вершинных атрибутов
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // левая вершина
-         0.5f, -0.5f, 0.0f, // правая вершина
-         0.0f,  0.5f, 0.0f  // верхняя вершина   
+         0.5f,  0.5f, 0.0f,  // верхняя правая
+         0.5f, -0.5f, 0.0f,  // нижняя правая
+        -0.5f, -0.5f, 0.0f,  // нижняя левая
+        -0.5f,  0.5f, 0.0f   // верхняя левая
     };
-
-    unsigned int VBO, VAO;
+    unsigned int indices[] = {  // помните, что мы начинаем с 0!
+        0, 1, 3,  // первый треугольник
+        1, 2, 3   // второй треугольник
+    };
+    unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     // Сначала связываем объект вершинного массива, затем связываем и устанавливаем вершинный буфер(ы), и затем конфигурируем вершинный атрибут(ы)
     glBindVertexArray(VAO);
@@ -118,14 +118,20 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // Обратите внимание, что данное действие разрешено, вызов glVertexAttribPointer() зарегистрировал VBO как привязанный вершинный буферный объект для вершинного атрибута, так что после этого мы можем спокойно выполнить отвязку
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // Вы можете отменить привязку VAO после этого, чтобы другие вызовы VAO случайно не изменили этот VAO (но подобное довольно редко случается).
-    // Модификация других VAO требует вызова glBindVertexArray(), поэтому мы обычно не снимаем привязку VAO (или VBO), когда это не требуется напрямую
+    // помните: не отвязывайте EBO, пока VАО активен, поскольку связанного объект буфера элемента хранится в VАО; сохраняйте привязку EBO.
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // Вы можете отменить привязку VАО после этого, чтобы другие вызовы VАО случайно не изменили этот VAO (но подобное довольно редко случается).
+    // Модификация других VAO требует вызов glBindVertexArray(), поэтому мы обычно не снимаем привязку VAO (или VBO), когда это не требуется напрямую
     glBindVertexArray(0);
 
 
@@ -144,11 +150,12 @@ int main()
 
         // Рисуем наш первый треугольник
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // поскольку у нас есть только один VAO, то нет необходимости связывать его каждый раз (но мы сделаем это, чтобы всё было немного организованнее)
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        // glBindVertexArray(0); // не нужно каждый раз его отвязывать
+        glBindVertexArray(VAO); // поскольку у нас есть только один VАО, то нет необходимости связывать его каждый раз, но мы сделаем это, чтобы всё было немного более организованно
+        // glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // glBindVertexArray(0); // не нужно каждый раз его отвязывать  
 
-        // glfw: обмен содержимым front- и back-буферов. Отслеживание событий ввода/вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
+        // glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -156,6 +163,7 @@ int main()
     // Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     // glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
     glfwTerminate();
@@ -173,6 +181,6 @@ void processInput(GLFWwindow* window)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // Убеждаемся, что окно просмотра соответствует новым размерам окна.
-    // Обратите внимание, высота окна на Retina-дисплеях будет значительно больше, чем указано в программе
+    // Обратите внимание, что ширина и высота будут значительно больше, чем указано, на Retina-дисплеях
     glViewport(0, 0, width, height);
 }
