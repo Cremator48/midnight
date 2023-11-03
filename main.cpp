@@ -12,27 +12,23 @@ const unsigned int SCR_HEIGHT = 600;
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 1) in vec3 aColor;\n"
+"out vec3 ourColor;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"ourColor = aColor;\n"
 "}\0";
 
 
-const char* fragmentShaderSource1 = "#version 330 core\n"
+const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
-"uniform vec4 ourColor;\n"
+"in vec3 ourColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = ourColor;\n"
+"   FragColor = vec4(ourColor, 1.0f);\n"
 "}\n\0";
 
-
-const char* fragmentShaderSource2 = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
-"}\n\0";
 
 int main()
 {
@@ -79,105 +75,67 @@ int main()
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // Фрагментный шейдер 1
-    int fragmentShader1 = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader1, 1, &fragmentShaderSource1, NULL);
-    glCompileShader(fragmentShader1);
+    // Фрагментный шейдер
+    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
 
     // Проверка на наличие ошибок компилирования шейдера
-    glGetShaderiv(fragmentShader1, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
-        glGetShaderInfoLog(fragmentShader1, 512, NULL, infoLog);
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-
-    // Фрагментный шейдер 2
-    int fragmentShader2 = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader2, 1, &fragmentShaderSource2, NULL);
-    glCompileShader(fragmentShader2);
-
-    // Проверка на наличие ошибок компилирования шейдера
-    glGetShaderiv(fragmentShader2, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader2, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-
-    // Связывание шейдеров 1
-    int shaderProgram1 = glCreateProgram();
-    glAttachShader(shaderProgram1, vertexShader);
-    glAttachShader(shaderProgram1, fragmentShader1);
-    glLinkProgram(shaderProgram1);
+    // Связывание шейдеров
+    int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
 
     // Проверка на наличие ошибок связывания шейдеров
-    glGetProgramiv(shaderProgram1, GL_LINK_STATUS, &success);
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(shaderProgram1, 512, NULL, infoLog);
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
-    glDeleteShader(fragmentShader1);
-
-    // Связывание шейдеров 2
-    int shaderProgram2 = glCreateProgram();
-    glAttachShader(shaderProgram2, vertexShader);
-    glAttachShader(shaderProgram2, fragmentShader2);
-    glLinkProgram(shaderProgram2);
-
-    // Проверка на наличие ошибок связывания шейдеров
-    glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram2, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
+    glDeleteShader(fragmentShader);
     glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader2);
 
 
     // Указывание вершин (и буферов) и настройка вершинных атрибутов
-    float vertices1[] = {
-                              // 1 треугольник
-        -0.75f,-0.25f, 0.0f,  // нижняя левая
-        -0.25f,-0.25f, 0.0f,  // нижняя правая
-        -0.5f,  0.25f, 0.0f,  // верхняя центр
+    float vertices[] = {
+                              // треугольник
+
+          // координаты            цвета
+        -0.5f,-0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // нижняя левая
+         0.5f,-0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // нижняя правая
+         0.0f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // верхняя центр
     };
 
-    float vertices2[] = {
-                              // 2 треугольник
-         0.25f,-0.25f, 0.0f,  // нижняя левая
-         0.75f,-0.25f, 0.0f,  // нижняя правая
-         0.5f,  0.25f, 0.0f   // верхняя центр
-    };
+
    
-    unsigned int VBO_1, VBO_2, VAO_1, VAO_2;
-    glGenVertexArrays(1, &VAO_1);
-    glGenVertexArrays(1, &VAO_2);
-    glGenBuffers(1, &VBO_1);
-    glGenBuffers(1, &VBO_2);
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
 
     // Сначала связываем объект вершинного массива, затем связываем и устанавливаем вершинный буфер(ы), и затем конфигурируем вершинный атрибут(ы)
-    glBindVertexArray(VAO_1);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_1);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    //Координатный атрибут
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    //Цветовой атрибут
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Вызов glVertexAttribPointer() зарегистрировал VBO как привязанный вершинный буферный объект для вершинного атрибута, так что после этого мы можем спокойно выполнить отвязку
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-
-    glBindVertexArray(VAO_2);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(0);
 
     
 
@@ -185,50 +143,22 @@ int main()
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     
-    float r, g, b;
-    r = 0.3f;
-    g = 0.0f;
-    b = 0.3f;
-
     // Цикл рендеринга
     while (!glfwWindowShouldClose(window))
     {
         // Обработка ввода
-
-        
         processInput(window);
-
-        int vertexColorLocation = glGetUniformLocation(shaderProgram1, "ourColor");
-        
-
-        
 
         // Рендеринг
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Рисуем наш первый треугольник
-        glUseProgram(shaderProgram1);
-        glUniform4f(vertexColorLocation, 1.0f, 0.0f, 1.0f, 1.0f);
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        {
-            b = b + 0.01f;
-        }
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        {
-            b = b - 0.01f;
-        }
-            glUniform4f(vertexColorLocation, r, g, b, 1.0f);
-        glBindVertexArray(VAO_1);
+        glUseProgram(shaderProgram);
+
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        
-        glUseProgram(shaderProgram2);
-        glBindVertexArray(VAO_2);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-       
-        
 
         //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // не нужно каждый раз его отвязывать  
@@ -239,11 +169,8 @@ int main()
     }
 
     // Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
-    glDeleteVertexArrays(1, &VAO_1);
-    glDeleteBuffers(1, &VBO_1);
-
-    glDeleteVertexArrays(1, &VAO_2);
-    glDeleteBuffers(1, &VBO_2);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 
     // glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
     glfwTerminate();
