@@ -99,40 +99,45 @@ int main()
     glDeleteShader(fragmentShader);
 
     // Указывание вершин (и буферов) и настройка вершинных атрибутов
-    float vertices[] = {
+    float vertices1[] = {
                               // 1 треугольник
         -0.75f,-0.25f, 0.0f,  // нижняя левая
         -0.25f,-0.25f, 0.0f,  // нижняя правая
         -0.5f,  0.25f, 0.0f,  // верхняя центр
+    };
 
+    float vertices2[] = {
                               // 2 треугольник
          0.25f,-0.25f, 0.0f,  // нижняя левая
          0.75f,-0.25f, 0.0f,  // нижняя правая
          0.5f,  0.25f, 0.0f   // верхняя центр
     };
    
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    unsigned int VBO_1, VBO_2, VAO_1, VAO_2;
+    glGenVertexArrays(1, &VAO_1);
+    glGenVertexArrays(1, &VAO_2);
+    glGenBuffers(1, &VBO_1);
+    glGenBuffers(1, &VBO_2);
 
     // Сначала связываем объект вершинного массива, затем связываем и устанавливаем вершинный буфер(ы), и затем конфигурируем вершинный атрибут(ы)
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
+    glBindVertexArray(VAO_1);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_1);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Обратите внимание, что данное действие разрешено, вызов glVertexAttribPointer() зарегистрировал VBO как привязанный вершинный буферный объект для вершинного атрибута, так что после этого мы можем спокойно выполнить отвязку
+    // Вызов glVertexAttribPointer() зарегистрировал VBO как привязанный вершинный буферный объект для вершинного атрибута, так что после этого мы можем спокойно выполнить отвязку
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    // помните: не отвязывайте EBO, пока VАО активен, поскольку связанного объект буфера элемента хранится в VАО; сохраняйте привязку EBO.
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    // Вы можете отменить привязку VАО после этого, чтобы другие вызовы VАО случайно не изменили этот VAO (но подобное довольно редко случается).
-    // Модификация других VAO требует вызов glBindVertexArray(), поэтому мы обычно не снимаем привязку VAO (или VBO), когда это не требуется напрямую
+    glBindVertexArray(VAO_2);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_2);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
     glBindVertexArray(0);
 
 
@@ -151,8 +156,19 @@ int main()
 
         // Рисуем наш первый треугольник
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // поскольку у нас есть только один VАО, то нет необходимости связывать его каждый раз, но мы сделаем это, чтобы всё было немного более организованно
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        
+
+        glBindVertexArray(VAO_1);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        
+
+        glBindVertexArray(VAO_2);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        
+
         //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // не нужно каждый раз его отвязывать  
 
@@ -162,8 +178,11 @@ int main()
     }
 
     // Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO_1);
+    glDeleteBuffers(1, &VBO_1);
+
+    glDeleteVertexArrays(1, &VAO_2);
+    glDeleteBuffers(1, &VBO_2);
 
     // glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
     glfwTerminate();
