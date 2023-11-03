@@ -20,9 +20,10 @@ const char* vertexShaderSource = "#version 330 core\n"
 
 const char* fragmentShaderSource1 = "#version 330 core\n"
 "out vec4 FragColor;\n"
+"uniform vec4 ourColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"   FragColor = ourColor;\n"
 "}\n\0";
 
 
@@ -178,15 +179,29 @@ int main()
 
     glBindVertexArray(0);
 
+    
 
     // Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    
+    float r, g, b;
+    r = 0.3f;
+    g = 0.0f;
+    b = 0.3f;
 
     // Цикл рендеринга
     while (!glfwWindowShouldClose(window))
     {
         // Обработка ввода
+
+        
         processInput(window);
+
+        int vertexColorLocation = glGetUniformLocation(shaderProgram1, "ourColor");
+        
+
+        
 
         // Рендеринг
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -194,6 +209,16 @@ int main()
 
         // Рисуем наш первый треугольник
         glUseProgram(shaderProgram1);
+        glUniform4f(vertexColorLocation, 1.0f, 0.0f, 1.0f, 1.0f);
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        {
+            b = b + 0.01f;
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        {
+            b = b - 0.01f;
+        }
+            glUniform4f(vertexColorLocation, r, g, b, 1.0f);
         glBindVertexArray(VAO_1);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -202,6 +227,7 @@ int main()
         glBindVertexArray(VAO_2);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
+       
         
 
         //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
