@@ -16,6 +16,8 @@ const char* vertexShaderSource = "#version 330 core\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 "}\0";
+
+
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
@@ -98,19 +100,20 @@ int main()
 
     // ”казывание вершин (и буферов) и настройка вершинных атрибутов
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,  // верхн€€ права€
-         0.5f, -0.5f, 0.0f,  // нижн€€ права€
-        -0.5f, -0.5f, 0.0f,  // нижн€€ лева€
-        -0.5f,  0.5f, 0.0f   // верхн€€ лева€
+                              // 1 треугольник
+        -0.75f,-0.25f, 0.0f,  // нижн€€ лева€
+        -0.25f,-0.25f, 0.0f,  // нижн€€ права€
+        -0.5f,  0.25f, 0.0f,  // верхн€€ центр
+
+                              // 2 треугольник
+         0.25f,-0.25f, 0.0f,  // нижн€€ лева€
+         0.75f,-0.25f, 0.0f,  // нижн€€ права€
+         0.5f,  0.25f, 0.0f   // верхн€€ центр
     };
-    unsigned int indices[] = {  // помните, что мы начинаем с 0!
-        0, 1, 3,  // первый треугольник
-        1, 2, 3   // второй треугольник
-    };
-    unsigned int VBO, VAO, EBO;
+   
+    unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
 
     // —начала св€зываем объект вершинного массива, затем св€зываем и устанавливаем вершинный буфер(ы), и затем конфигурируем вершинный атрибут(ы)
     glBindVertexArray(VAO);
@@ -118,8 +121,6 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -151,8 +152,8 @@ int main()
         // –исуем наш первый треугольник
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO); // поскольку у нас есть только один Vјќ, то нет необходимости св€зывать его каждый раз, но мы сделаем это, чтобы всЄ было немного более организованно
-        // glDrawArrays(GL_TRIANGLES, 0, 6);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
         // glBindVertexArray(0); // не нужно каждый раз его отв€зывать  
 
         // glfw: обмен содержимым переднего и заднего буферов. ќпрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
@@ -163,7 +164,6 @@ int main()
     // ќпционально: освобождаем все ресурсы, как только они выполнили свое предназначение
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
 
     // glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
     glfwTerminate();
