@@ -32,6 +32,9 @@ const char* fragmentShaderSource = "#version 330 core\n"
 
 int main()
 {
+	
+	std::cout << "git on windows!\n";
+	
     // glfw: инициализация и конфигурирование
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
