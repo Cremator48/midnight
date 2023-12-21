@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "Shader_class.h"
+#include "stb_image.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -48,40 +49,81 @@ int main()
     float vertices[] = {
                               // треугольник
 
-          // координаты            цвета
-        -0.5f,-0.5f, 0.0f,   1.0f, 0.0f, 0.0f,  // нижняя левая
-         0.5f,-0.5f, 0.0f,   0.0f, 1.0f, 0.0f,  // нижняя правая
-         0.0f, 0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // верхняя центр
+          // координаты            текстуры
+         -0.5f,-0.5f, 0.0f,   0.0f, 0.0f, // нижняя левая       0
+          0.5f,-0.5f, 0.0f,   1.0f, 0.0f, // нижняя правая      1
+         -0.5f, 0.5f, 0.0f,   0.0f, 1.0f,  // верхняя левая     2
+          0.5f, 0.5f, 0.0f,   1.0f, 1.0f  // верхняя правая     3
+    };
+
+    unsigned int indices[] = {
+        0, 1, 2, // первый треугольник
+        1, 2, 3  // второй треугольник
     };
 
 
-    unsigned int VBO, VAO;
+    unsigned int VBO, VAO, EBO;
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
 
-    // Сначала связываем объект вершинного массива, затем связываем и устанавливаем вершинный буфер(ы), и затем конфигурируем вершинный атрибут(ы)
+
+
+    // Сначала связываем объект вершинного массива, затем связываем и устанавливаем вершинный буфер, и затем конфигурируем вершинный атрибут
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     //Координатный атрибут
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    //Цветовой атрибут
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    //Текстурный атрибут
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Вызов glVertexAttribPointer() зарегистрировал VBO как привязанный вершинный буферный объект для вершинного атрибута, так что после этого мы можем спокойно выполнить отвязку
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+
+    // Загрузка и создание текстуры
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture); // все последующие GL_TEXTURE_2D-операции теперь будут влиять на данный текстурный объект
+
+    // Установка параметров наложения текстуры
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // установка метода наложения текстуры GL_REPEAT (стандартный метод наложения)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Установка параметров фильтрации текстуры
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Загрузка изображения, создание текстуры и генерирование мипмап-уровней
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("../midnight/res/box.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
 
     
 
     // Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    Shader ourShader("C:/Users/Tyurin/midnight/shader.vs","C:/Users/Tyurin/midnight/shader.fs");
+    Shader ourShader("../midnight/shader.vs","../midnight/shader.fs");
   
 
     // Цикл рендеринга
@@ -94,13 +136,12 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        glBindTexture(GL_TEXTURE_2D, texture);
+
         // Рисуем наш первый треугольник
         ourShader.use();
-        float timeValue = glfwGetTime();
-        ourShader.setFloat("ourPlace", sin(timeValue));
-
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+   
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
         glfwSwapBuffers(window);
@@ -110,6 +151,7 @@ int main()
     // Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     // glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
     glfwTerminate();
