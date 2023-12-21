@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include "Shader_class.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
@@ -9,25 +10,6 @@ void processInput(GLFWwindow* window);
 // Константы
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in vec3 aColor;\n"
-"out vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"ourColor = aColor;\n"
-"}\0";
-
-
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"in vec3 ourColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(ourColor, 1.0f);\n"
-"}\n\0";
 
 
 int main()
@@ -61,51 +43,7 @@ int main()
     }
 
 
-    // Компилирование нашей шейдерной программы. Тест git хаба
-
-    // Вершинный шейдер
-    int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    // Проверка на наличие ошибок компилирования шейдера
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Фрагментный шейдер
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // Проверка на наличие ошибок компилирования шейдера
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // Связывание шейдеров
-    int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // Проверка на наличие ошибок связывания шейдеров
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-    glDeleteShader(fragmentShader);
-    glDeleteShader(vertexShader);
-
+  
 
     // Указывание вершин (и буферов) и настройка вершинных атрибутов
     float vertices[] = {
@@ -145,7 +83,8 @@ int main()
     // Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    
+    Shader ourShader("C:/Users/Tyurin/midnight/shader.vs","C:/Users/Tyurin/midnight/shader.fs");
+
     // Цикл рендеринга
     while (!glfwWindowShouldClose(window))
     {
@@ -157,14 +96,10 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Рисуем наш первый треугольник
-        glUseProgram(shaderProgram);
+        ourShader.use();
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-
-
-        //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-        // glBindVertexArray(0); // не нужно каждый раз его отвязывать  
 
         // glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
         glfwSwapBuffers(window);
