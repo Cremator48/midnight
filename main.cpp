@@ -42,8 +42,7 @@ int main()
         return -1;
     }
 
-
-  
+     
 
     // Указывание вершин (и буферов) и настройка вершинных атрибутов
     float vertices[] = {
@@ -56,7 +55,6 @@ int main()
     };
 
 
-   
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -84,6 +82,7 @@ int main()
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     Shader ourShader("C:/Users/Tyurin/midnight/shader.vs","C:/Users/Tyurin/midnight/shader.fs");
+  
 
     // Цикл рендеринга
     while (!glfwWindowShouldClose(window))
@@ -97,6 +96,8 @@ int main()
 
         // Рисуем наш первый треугольник
         ourShader.use();
+        float timeValue = glfwGetTime();
+        ourShader.setFloat("ourPlace", sin(timeValue));
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
