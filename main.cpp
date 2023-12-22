@@ -5,6 +5,11 @@
 #include "Shader_class.h"
 #include "stb_image.h"
 
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
@@ -43,7 +48,7 @@ int main()
         return -1;
     }
 
-     
+    
 
     // Указывание вершин (и буферов) и настройка вершинных атрибутов
     float vertices[] = {
@@ -125,6 +130,9 @@ int main()
 
     Shader ourShader("../midnight/shader.vs","../midnight/shader.fs");
   
+    unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+    
+    
 
     // Цикл рендеринга
     while (!glfwWindowShouldClose(window))
@@ -140,6 +148,12 @@ int main()
 
         // Рисуем наш первый треугольник
         ourShader.use();
+
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        
    
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
