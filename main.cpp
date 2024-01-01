@@ -33,6 +33,8 @@ float lastFrame = 0.0f; // врем€ последнего кадра
 
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
+float ambientStrength;
+
 int main()
 {
 	
@@ -154,6 +156,8 @@ int main()
     Shader ourShader("../midnight/shader.vs","../midnight/shader.fs");
     Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
   
+    ambientStrength = 0.0f;
+
     // ÷икл рендеринга
     while (!glfwWindowShouldClose(window))
     {
@@ -169,7 +173,7 @@ int main()
         processInput(window);
 
         // –ендеринг фона
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
 
@@ -191,7 +195,8 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
         ourShader.setVec3("lightPos", lightPos);
-
+        ourShader.setVec3("viewPos", camera.Position);
+        ourShader.setFloat("ambientStrength_u", ambientStrength);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -206,6 +211,12 @@ int main()
         // model
         //ƒелаем необходимые преобразовани€ с кубом-источником
         model = glm::mat4(1.0f);
+
+        float posx = sin(glfwGetTime());
+        float posz = cos(glfwGetTime());
+        float posy = sin(glfwGetTime());
+
+        lightPos = glm::vec3(posx, posy, posz);
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
 
@@ -259,6 +270,10 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        ambientStrength += 0.001f;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        ambientStrength -= 0.001f;
 }
 
 // glfw: вс€кий раз, когда измен€ютс€ размеры окна (пользователем или операционной системой), вызываетс€ данна€ callback-функци€
