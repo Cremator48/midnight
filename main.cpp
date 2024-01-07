@@ -33,7 +33,7 @@ float lastFrame = 0.0f; // время последнего кадра
 
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
-float ambientStrength;
+
 
 int main()
 {
@@ -120,14 +120,16 @@ int main()
 
        
     unsigned int VBO, VAO, lightVAO;
-        
+
+      
     glGenVertexArrays(1, &VAO);
     glGenVertexArrays(1, &lightVAO);
     glGenBuffers(1, &VBO);
-
-
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+
+
 
 
     // Сначала связываем объект вершинного массива, затем связываем и устанавливаем вершинный буфер, и затем конфигурируем вершинный атрибут
@@ -149,6 +151,9 @@ int main()
     //Координатный атрибут
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+
+
     
     // Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -156,7 +161,7 @@ int main()
     Shader ourShader("../midnight/shader.vs","../midnight/shader.fs");
     Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
   
-    ambientStrength = 0.0f;
+    float ambientStrength = 0.0f;
 
     // Цикл рендеринга
     while (!glfwWindowShouldClose(window))
@@ -173,16 +178,24 @@ int main()
         processInput(window);
 
         // Рендеринг фона
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.1f);
         glClear(GL_COLOR_BUFFER_BIT);
 
 
 
         // Куб-не источник
-
         ourShader.use();
-        ourShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
         ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+        ourShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+        ourShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+        ourShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+        ourShader.setFloat("material.shininess", 32.0f);
+        
+
+        ourShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        ourShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        ourShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
 
         // model
         glm::mat4 model = glm::mat4(1.0f);
@@ -196,12 +209,13 @@ int main()
         ourShader.setMat4("view", view);
         ourShader.setVec3("lightPos", lightPos);
         ourShader.setVec3("viewPos", camera.Position);
-        ourShader.setFloat("ambientStrength_u", ambientStrength);
+        ourShader.setFloat("ambientStrength", ambientStrength);
+
+        
+
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-
 
 
 
@@ -237,6 +251,16 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         
+
+
+
+
+
+
+        
+
+
+
         
 
         // glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
@@ -270,10 +294,6 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        ambientStrength += 0.001f;
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        ambientStrength -= 0.001f;
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция
