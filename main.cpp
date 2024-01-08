@@ -32,7 +32,6 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 
 
@@ -133,11 +132,10 @@ int main()
     glm::vec3(-1.3f,  1.0f, -1.5f)
     };
        
-    unsigned int VBO, VAO, lightVAO;
+    unsigned int VBO, VAO;
 
       
     glGenVertexArrays(1, &VAO);
-    glGenVertexArrays(1, &lightVAO);
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -162,16 +160,6 @@ int main()
     // Атрибуты текстур
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
-
-    glBindVertexArray(lightVAO);
-    
-
-    //Координатный атрибут
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-
-
     
     // Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -224,6 +212,11 @@ int main()
         ourShader.setFloat("light.linear", 0.09f);
         ourShader.setFloat("light.quadratic", 0.032f);
 
+        ourShader.setVec3("light.position", camera.Position);
+        ourShader.setVec3("light.direction", camera.Front);
+        ourShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
+        ourShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+
 
         // model
         glm::mat4 model = glm::mat4(1.0f);
@@ -235,7 +228,6 @@ int main()
         // view
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
-        ourShader.setVec3("lightPos", lightPos);
         ourShader.setVec3("viewPos", camera.Position);
         ourShader.setFloat("ambientStrength", ambientStrength);
 
@@ -260,51 +252,6 @@ int main()
         }
 
 
-
-        // Включаем шейдер для рисования куба-источника
-        lightCubeShader.use();
-
-        // model
-        //Делаем необходимые преобразования с кубом-источником
-        model = glm::mat4(1.0f);
-
-        float posx = sin(glfwGetTime());
-        float posz = cos(glfwGetTime());
-        float posy = sin(glfwGetTime());
-
-        lightPos = glm::vec3(posx, posy, posz);
-        model = glm::translate(model, lightPos);
-        model = glm::scale(model, glm::vec3(0.2f));
-
-        //Отправляем в шейдер преобразования
-        lightCubeShader.setMat4("model", model);
-
-        // projection
-        lightCubeShader.setMat4("projection", projection);
-
-        // view
-        lightCubeShader.setMat4("view", view);
-
-
-        //Связываем VAO куба-источника с операцией рисования             
-        glBindVertexArray(lightVAO);
-        
-        //Рисуем куб-источник
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        
-
-
-
-
-
-
-        
-
-
-
-        
-
         // glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -313,7 +260,6 @@ int main()
 
     // Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
     glDeleteVertexArrays(1, &VAO);
-    glDeleteVertexArrays(1, &lightVAO);
     glDeleteBuffers(1, &VBO);
 
    
