@@ -190,28 +190,32 @@ int main()
         processInput(window);
 
         // Рендеринг фона
-        glClearColor(0.1f, 0.1f, 0.1f, 1.1f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
 
 
         // Куб-не источник
         ourShader.use();
+
+        //Настройки отражения света материала куба
         ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
         ourShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
         ourShader.setInt("material.specular", 1);
         ourShader.setFloat("material.shininess", 32.0f);
         
-
+        //Настройки цвета самого света
         ourShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
         ourShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
         ourShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
+        //настройка затухания света
         ourShader.setFloat("light.constant", 1.0f);
         ourShader.setFloat("light.linear", 0.09f);
         ourShader.setFloat("light.quadratic", 0.032f);
 
+        //Настройка направления освещения + конуса прожектора
         ourShader.setVec3("light.position", camera.Position);
         ourShader.setVec3("light.direction", camera.Front);
         ourShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
