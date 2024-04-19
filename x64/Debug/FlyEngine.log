@@ -1,0 +1,13 @@
+﻿  glad.c
+  main.cpp
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(182,28): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(299,17): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(300,17): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(304,19): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(305,19): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(307,13): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(308,13): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(315,31): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
+  stb_image.cpp
+  Создание кода...
+  FlyEngine.vcxproj -> C:\Users\tyuri\Documents\GitHub\midnight\x64\Debug\FlyEngine.exe
