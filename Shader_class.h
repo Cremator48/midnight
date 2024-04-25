@@ -98,7 +98,7 @@ public:
 
 	void setBool(const std::string& name, bool value) const
 	{
-		glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+		glUniform1f(glGetUniformLocation(ID, name.c_str()), (int)value);
 	}
 	void setInt(const std::string& name, int value) const
 	{

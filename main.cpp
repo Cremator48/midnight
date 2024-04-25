@@ -32,7 +32,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
+bool fPressed;
 
+bool isFlashlightEnable = false;
 
 
 int main()
@@ -63,6 +65,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
 
     // glad: загрузка всех указателей на OpenGL-функции
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -199,27 +202,58 @@ int main()
         // Куб-не источник
         ourShader.use();
 
+      
         //Настройки отражения света материала куба
-        ourShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-        ourShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-        ourShader.setInt("material.specular", 1);
+        ourShader.setInt("material.diffuse", 0); //Подставляем текстуру под номером 0 в переменную material.diffuse
+        ourShader.setInt("material.specular", 1); //Подставляем текстуру под номером 1 в переменную material.specular
         ourShader.setFloat("material.shininess", 32.0f);
         
+        //[1] SpotLight
         //Настройки цвета самого света
-        ourShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-        ourShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-        ourShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        ourShader.setVec3("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        ourShader.setVec3("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        ourShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+        bool fCurrentlyPressed = glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS;
+
+
+        if (!fPressed && fCurrentlyPressed) 
+        {
+            isFlashlightEnable = !isFlashlightEnable;
+            
+        }
+        fPressed = fCurrentlyPressed;
+
+        ourShader.setInt("isFlashlightEnable", isFlashlightEnable);
+       
 
         //настройка затухания света
-        ourShader.setFloat("light.constant", 1.0f);
-        ourShader.setFloat("light.linear", 0.09f);
-        ourShader.setFloat("light.quadratic", 0.032f);
+        ourShader.setFloat("spotLight.constant", 1.0f);
+        ourShader.setFloat("spotLight.linear", 0.09f);
+        ourShader.setFloat("spotLight.quadratic", 0.032f);
 
         //Настройка направления освещения + конуса прожектора
-        ourShader.setVec3("light.position", camera.Position);
-        ourShader.setVec3("light.direction", camera.Front);
-        ourShader.setFloat("light.cutOff", glm::cos(glm::radians(12.5f)));
-        ourShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+        ourShader.setVec3("spotLight.position", camera.Position);
+        ourShader.setVec3("spotLight.direction", camera.Front);
+        ourShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+        ourShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+
+
+        //[2] PointLight
+        ourShader.setVec3("pointLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        ourShader.setVec3("pointLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+        ourShader.setVec3("pointLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+        //настройка затухания света
+        ourShader.setFloat("pointLight.constant", 1.0f);
+        ourShader.setFloat("pointLight.linear", 0.09f);
+        ourShader.setFloat("pointLight.quadratic", 0.032f);
+
+        //Настройка расположения источника света
+        float x = sin(glfwGetTime()) * 5.0f;
+        float y = 0.0f;
+        float z = cos(glfwGetTime()) * 5.0f;
+        glm::vec3 pointLightPosition(x, y, z);
+        ourShader.setVec3("pointLight.position", pointLightPosition);
 
 
         // model
@@ -233,7 +267,7 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         ourShader.setMat4("view", view);
         ourShader.setVec3("viewPos", camera.Position);
-        ourShader.setFloat("ambientStrength", ambientStrength);
+        ourShader.setFloat("ambientStrength", (int)ambientStrength);
 
         
         glActiveTexture(GL_TEXTURE0);
@@ -244,6 +278,7 @@ int main()
         
         glBindVertexArray(VAO);
 
+        //Отрисовка кубов
         for (unsigned int i = 0; i < 10; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
@@ -254,6 +289,17 @@ int main()
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        //Отрисовка куба-источника света
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, pointLightPosition);
+        model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+        lightCubeShader.use();
+        lightCubeShader.setMat4("model", model);
+        lightCubeShader.setMat4("projection", projection);
+        lightCubeShader.setMat4("view", view);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        
 
 
         // glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
