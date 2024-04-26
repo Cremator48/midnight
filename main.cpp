@@ -171,7 +171,7 @@ int main()
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
 
-	Model myModel("./res/models/backpack/backpack.obj");
+	Model myModel("../midnight/res/models/backpack/backpack.obj");
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
