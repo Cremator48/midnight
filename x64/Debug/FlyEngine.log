@@ -2,15 +2,15 @@
 C:\Users\tyuri\Documents\GitHub\midnight\Shader_class.h(101,60): warning C4244: аргумент: преобразование "int" в "GLfloat", возможна потеря данных
   (компиляция исходного файла "main.cpp")
   
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(185,28): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(252,17): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(254,17): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(270,52): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(349,17): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(350,17): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(354,19): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(355,19): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(357,13): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(358,13): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(365,31): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(186,22): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(245,11): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(247,11): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(271,46): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(352,11): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(353,11): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(357,16): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(358,16): warning C4244: инициализация: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(360,10): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(361,10): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+C:\Users\tyuri\Documents\GitHub\midnight\main.cpp(368,28): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
   FlyEngine.vcxproj -> C:\Users\tyuri\Documents\GitHub\midnight\x64\Debug\FlyEngine.exe
