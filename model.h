@@ -33,9 +33,9 @@ public:
     bool gammaCorrection;
 
     // Конструктор, который в качестве аргумента использует путь к 3D-модели
-    Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
+    Model(string const& path, unsigned int pFlags, bool gamma = false) : gammaCorrection(gamma)
     {
-        loadModel(path);
+        loadModel(path, pFlags);
     }
 
     // Выполняем отрисовку модели и всех её мешей
@@ -47,11 +47,16 @@ public:
 
 private:
     // Загружаем модель с помощью Assimp и сохраняем полученные меши в векторе meshes
-    void loadModel(string const& path)
+    void loadModel(string const& path, unsigned int pFlags)
     {
         // Чтение файла с помощью Assimp 
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | /*aiProcess_FlipUVs | */ aiProcess_CalcTangentSpace);
+
+        const aiScene* scene = importer.ReadFile(path, pFlags); // aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace
+        
+
+
+        
 
         // Проверка на ошибки
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // если НЕ 0

@@ -24,6 +24,7 @@ void key_callback(GLFWwindow* window, int key, int action, int scancode, int mod
 // Константы
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+float sizeOfBox = 50.0f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
@@ -82,26 +83,26 @@ int main()
 	// Указывание вершин (и буферов) и настройка вершинных атрибутов
 	float vertices[] = {
 		// координаты        // нормали           // текстурные координаты
-	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,  //Задний квадрат
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-	   -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f, 0.33f,   // 7  //Задний квадрат (закрашено)
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.5f,  0.33f,   // 4
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.5f,  0.66f,   // 5
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.5f,  0.66f,   // 5
+	   -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f,  0.66f,  // 6
+	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f,  0.33f,  // 7
 
-	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // Передний квадрат
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-	   -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.33f, // 0   // Передний квадрат (закрашено)
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.25f, 0.33f, // 3
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.25f, 0.66f, // 2
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.25f, 0.66f, // 2
+	   -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.66f, // 1
+	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.33f, // 0
 
-	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // Левый квадрат
-	   -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-	   -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.66f, // 12  // Левый квадрат (закрашено)
+	   -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.75f, 0.66f, // 6
+	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.75f, 0.33f, // 7
+	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.75f, 0.33f, // 7
+	   -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.33f, // 13
+	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.66f, // 12
 
 		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // Правый квадрат
 		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
@@ -125,19 +126,25 @@ int main()
 	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
+	float floorVertices[] = {
+	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // Верхний квадрат
+		0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+	   -0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+	};
 
 
 	//Данные для квадрата текстурированного
-	unsigned int VBO, VAO, lightVAO;
+	unsigned int VBO, VAO;
+
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 
-
 	glBindVertexArray(VAO);
-
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
 
 	//Координатный атрибут
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -152,6 +159,29 @@ int main()
 	glEnableVertexAttribArray(2);
 
 
+	unsigned int floorVBO, floorVAO;
+	glGenVertexArrays(1, &floorVAO);
+	glGenBuffers(1, &floorVBO);
+	
+	glBindVertexArray(floorVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
+
+	//Координатный атрибут
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// Атрибуты нормалей
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	// Атрибуты текстур
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+
+
+	unsigned int lightVAO;
+	//Настройка куба освещения
 	glGenVertexArrays(1, &lightVAO);
 
 	glBindVertexArray(lightVAO);
@@ -171,7 +201,15 @@ int main()
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
 
-	Model myModel("../midnight/res/models/backpack/backpack.obj");
+	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs   | aiProcess_CalcTangentSpace);
+	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs |  aiProcess_CalcTangentSpace);
+	Model backpackModel("../res/models/backpack/backpack.obj", aiProcess_Triangulate | /*aiProcess_FlipUVs | */  aiProcess_CalcTangentSpace);
+
+	unsigned int diffuseMap = loadTexture("../res/box.png");
+	unsigned int specularMap = loadTexture("../res/specular_map.png");
+	unsigned int skyBox = loadTexture("../res/skybox.png");
+	
+
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -183,6 +221,8 @@ int main()
 
 		//Вкючить буфер глубины
 		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+	
 
 		// Обработка ввода
 		processInput(window);
@@ -253,10 +293,7 @@ int main()
 		ourShader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-		// model
-		glm::mat4 model = glm::mat4(1.0f);
-		ourShader.setMat4("model", model);
-
+			
 		// projection
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		ourShader.setMat4("projection", projection);
@@ -265,11 +302,91 @@ int main()
 		ourShader.setMat4("view", view);
 		ourShader.setVec3("viewPos", camera.Position);
 
-
-		//Отрисовка модели
 		
-		myModel.Draw(ourShader);
 
+
+		//Отрисовка модели рюкзака
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+		ourShader.setMat4("model", model);
+		backpackModel.Draw(ourShader);
+		
+		//Отрисовка банки
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		ourShader.setMat4("model", model);
+		bankaModel.Draw(ourShader);
+
+		//Отрисовка черепа
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		ourShader.setMat4("model", model);
+		skullModel.Draw(ourShader);
+
+
+		//Отрисовка пола
+		//Привязка diffuse текстуры
+		glActiveTexture(GL_TEXTURE0);
+		ourShader.setInt("material.texture_diffuse1", 0);
+		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+		
+
+		//Привязка specular текстуры
+		glActiveTexture(GL_TEXTURE1);
+		ourShader.setInt("material.texture_specular1", 1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
+
+		//Трансляция модели вниз и увеличение
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, -0.8f, 0.0f));
+		model = glm::scale(model, glm::vec3(13.0f, 13.0f, 13.0f));
+		ourShader.setMat4("model", model);
+
+		//Отрисовка пола
+		glBindVertexArray(floorVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
+
+		// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
+		glActiveTexture(GL_TEXTURE0);
+
+
+		//Отрисовка куба
+		//Привязка diffuse текстуры
+		glActiveTexture(GL_TEXTURE0);
+		ourShader.setInt("material.texture_diffuse1", 0);
+		glBindTexture(GL_TEXTURE_2D, skyBox);
+
+
+		/*
+		//Привязка specular текстуры
+		glActiveTexture(GL_TEXTURE1);
+		ourShader.setInt("material.texture_specular1", 1);
+		glBindTexture(GL_TEXTURE_2D, specularMap);
+		*/
+
+		//Трансляция модели вниз и увеличение
+		model = glm::mat4(1.0f);
+
+	    model = glm::scale(model, glm::vec3(sizeOfBox, sizeOfBox, sizeOfBox));
+		ourShader.setMat4("model", model);
+
+		//Отрисовка куба
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+
+		// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
+		glActiveTexture(GL_TEXTURE0);
+
+
+
+		//Если PointLight включен - отрисовывай вращающийся куб-источник света
 		if (isPointLightEnable)
 		{
 			glBindVertexArray(lightVAO);
@@ -315,6 +432,17 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+	if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{ 
+		sizeOfBox = sizeOfBox + 0.01f;
+		std::cout << sizeOfBox << "\n";
+	}
+		
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		sizeOfBox = sizeOfBox - 0.01f;
+		std::cout << sizeOfBox << "\n";
+	}
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция
