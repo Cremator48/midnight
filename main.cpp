@@ -78,7 +78,7 @@ int main()
 		return -1;
 	}
 
-	
+
 
 	// Указывание вершин (и буферов) и настройка вершинных атрибутов
 	float vertices[] = {
@@ -104,30 +104,30 @@ int main()
 	   -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.33f, // 13
 	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.66f, // 12
 
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, // Правый квадрат
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.25f, 0.66f,	// 2		// Правый квадрат
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.66f, // 5
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.33f,	// 4
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.33f,	// 4
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.25f, 0.33f,	// 3
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.25f, 0.66f, // 2
 
-	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f, // Нижний квадрат
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-	   -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.75f, 0.33f,  // 7        // Нижний квадрат
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.5f,  0.33f,  // 4
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.5f,  0.0f,   // 9
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.5f,  0.0f,   // 9
+	   -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.75f, 0.0f,   // 8
+	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.75f, 0.33f,  // 7
 
-	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // Верхний квадрат
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-	   -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
+	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 0.66f,	 // 6		// Верхний квадрат
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  0.66f,  // 5
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  1.0f,   // 10
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  1.0f,   // 10
+	   -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 1.0f,   // 11
+	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 0.66f   // 6
 	};
 
 	float floorVertices[] = {
-	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f, // Верхний квадрат
+	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	// Верхний квадрат
 		0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
 		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
 		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
@@ -136,80 +136,89 @@ int main()
 	};
 
 
-	//Данные для квадрата текстурированного
+	//Настройка атрибутов вершин для скайбокса (и VBO для лампочки)
 	unsigned int VBO, VAO;
+	{
+		//Данные для скайбокса
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
 
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
+		glBindVertexArray(VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		//Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
 
-	//Координатный атрибут
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+		// Атрибуты текстур
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(1);
 
-	// Атрибуты нормалей
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// Атрибуты текстур
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-
-	unsigned int floorVBO, floorVAO;
-	glGenVertexArrays(1, &floorVAO);
-	glGenBuffers(1, &floorVBO);
+		glBindVertexArray(0);
+	}
 	
-	glBindVertexArray(floorVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
+	//Настройка атрибутов вершин для пола
+	unsigned int floorVAO;
+	{
+		unsigned int floorVBO;
+		glGenVertexArrays(1, &floorVAO);
+		glGenBuffers(1, &floorVBO);
 
-	//Координатный атрибут
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+		glBindVertexArray(floorVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
 
-	// Атрибуты нормалей
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+		//Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
 
-	// Атрибуты текстур
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
+		// Атрибуты нормалей
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
 
+		// Атрибуты текстур
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glBindVertexArray(0);
 
+		glDeleteBuffers(1, &floorVBO);
+	}
+	
+	// Настройка атрибутов вершин для лампочки
 	unsigned int lightVAO;
-	//Настройка куба освещения
-	glGenVertexArrays(1, &lightVAO);
+	{
+		//Настройка куба освещения
+		glGenVertexArrays(1, &lightVAO);
 
-	glBindVertexArray(lightVAO);
+		glBindVertexArray(lightVAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	//Координатный атрибут
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+		//Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
 
-	glBindVertexArray(0);
+		glBindVertexArray(0);
+	}
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	
+
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
+	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs");
 
-	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs   | aiProcess_CalcTangentSpace);
-	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs |  aiProcess_CalcTangentSpace);
+	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	Model backpackModel("../res/models/backpack/backpack.obj", aiProcess_Triangulate | /*aiProcess_FlipUVs | */  aiProcess_CalcTangentSpace);
 
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
 	unsigned int skyBox = loadTexture("../res/skybox.png");
-	
 
+	glm::vec3 pointLightPosition;
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -222,169 +231,173 @@ int main()
 		//Вкючить буфер глубины
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
-	
+
 
 		// Обработка ввода
 		processInput(window);
 
 		// Рендеринг фона
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//Настройки освещения
+		{
+
+			// Куб-не источник
+			ourShader.use();
+			ourShader.setFloat("material.shininess", 32.0f);
+
+			//[1] SpotLight
+			//Настройки цвета самого света
+			ourShader.setVec3("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+			ourShader.setVec3("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+			ourShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+			ourShader.setInt("isFlashlightEnable", isFlashlightEnable);
 
 
+			//настройка затухания света
+			ourShader.setFloat("spotLight.constant", 1.0f);
+			ourShader.setFloat("spotLight.linear", 0.09f);
+			ourShader.setFloat("spotLight.quadratic", 0.032f);
 
-		// Куб-не источник
-		ourShader.use();
-
-
-		//Настройки отражения света материала
-		/*
-		ourShader.setInt("material.diffuse", 0); //Подставляем текстуру под номером 0 в переменную material.diffuse
-		ourShader.setInt("material.specular", 1); //Подставляем текстуру под номером 1 в переменную material.specular
-		*/
-		ourShader.setFloat("material.shininess", 32.0f);
-
-		//[1] SpotLight
-		//Настройки цвета самого света
-		ourShader.setVec3("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		ourShader.setVec3("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		ourShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		ourShader.setInt("isFlashlightEnable", isFlashlightEnable);
+			//Настройка направления освещения + конуса прожектора
+			ourShader.setVec3("spotLight.position", camera.Position);
+			ourShader.setVec3("spotLight.direction", camera.Front);
+			ourShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+			ourShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
 
 
-		//настройка затухания света
-		ourShader.setFloat("spotLight.constant", 1.0f);
-		ourShader.setFloat("spotLight.linear", 0.09f);
-		ourShader.setFloat("spotLight.quadratic", 0.032f);
+			//[2] PointLight
+			ourShader.setInt("isPointLightEnable", isPointLightEnable);
+			ourShader.setVec3("pointLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+			ourShader.setVec3("pointLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+			ourShader.setVec3("pointLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-		//Настройка направления освещения + конуса прожектора
-		ourShader.setVec3("spotLight.position", camera.Position);
-		ourShader.setVec3("spotLight.direction", camera.Front);
-		ourShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-		ourShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+			//настройка затухания света
+			ourShader.setFloat("pointLight.constant", 1.0f);
+			ourShader.setFloat("pointLight.linear", 0.09f);
+			ourShader.setFloat("pointLight.quadratic", 0.032f);
 
-
-		//[2] PointLight
-		ourShader.setInt("isPointLightEnable", isPointLightEnable);
-		ourShader.setVec3("pointLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		ourShader.setVec3("pointLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		ourShader.setVec3("pointLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-		//настройка затухания света
-		ourShader.setFloat("pointLight.constant", 1.0f);
-		ourShader.setFloat("pointLight.linear", 0.09f);
-		ourShader.setFloat("pointLight.quadratic", 0.032f);
-
-		//Настройка расположения источника света
-		float x = sin(glfwGetTime()) * 5.0f;
-		float y = 0.0f;
-		float z = cos(glfwGetTime()) * 5.0f;
-		glm::vec3 pointLightPosition(x, y, z);
-		ourShader.setVec3("pointLight.position", pointLightPosition);
+			//Настройка расположения источника света
+			float x = sin(glfwGetTime()) * 5.0f;
+			float y = 0.0f;
+			float z = cos(glfwGetTime()) * 5.0f;
+			pointLightPosition = glm::vec3(x, y, z);
+			ourShader.setVec3("pointLight.position", pointLightPosition);
 
 
-		//[3] DirLight
+			//[3] DirLight
 
-		ourShader.setInt("isDirLightEnable", isDirLightEnable);
-		ourShader.setVec3("dirLight.direction", glm::vec3(3.0f, 3.0f, 3.0f));
-		ourShader.setVec3("dirLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		ourShader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			ourShader.setInt("isDirLightEnable", isDirLightEnable);
+			ourShader.setVec3("dirLight.direction", glm::vec3(3.0f, 3.0f, 3.0f));
+			ourShader.setVec3("dirLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+			ourShader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+			ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		}
 
-			
-		// projection
+
+		//настройка основных матриц: вида и проекции
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		ourShader.setMat4("projection", projection);
-		// view
 		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 model;
+
+		//Передача основных матриц и позиции камеры шейдеру
+		ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
+		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
 		ourShader.setVec3("viewPos", camera.Position);
 
-		
 
-
-		//Отрисовка модели рюкзака
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-		ourShader.setMat4("model", model);
-		backpackModel.Draw(ourShader);
-		
-		//Отрисовка банки
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		ourShader.setMat4("model", model);
-		bankaModel.Draw(ourShader);
-
-		//Отрисовка черепа
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		ourShader.setMat4("model", model);
-		skullModel.Draw(ourShader);
 
 
 		//Отрисовка пола
-		//Привязка diffuse текстуры
-		glActiveTexture(GL_TEXTURE0);
-		ourShader.setInt("material.texture_diffuse1", 0);
-		glBindTexture(GL_TEXTURE_2D, diffuseMap);
+		{
+			//Трансляция модели вниз и увеличение
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.0f, -0.8f, 0.0f));
+			model = glm::scale(model, glm::vec3(13.0f, 13.0f, 13.0f));
+			ourShader.setMat4("model", model);
 
+			//Привязка diffuse текстуры
+			ourShader.setInt("material.texture_diffuse1", 0);
+			glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+			//Привязка specular текстуры
+			ourShader.setInt("material.texture_specular1", 1);
+			glBindTexture(GL_TEXTURE_2D, specularMap);
+
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, diffuseMap);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, specularMap);
+
+
+			//Отрисовка пола
+			ourShader.use();
+			glBindVertexArray(floorVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+			
+			// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
+			glBindVertexArray(0);
+			glActiveTexture(GL_TEXTURE0);
+
+		}
+
+		// Отрисовка неба
+		{
+			skyBoxShader.use();
+			skyBoxShader.setInt("myTexture", 0);
+
+			//Трансляция модели вниз и увеличение
+			model = glm::mat4(1.0f);
+			model = glm::scale(model, glm::vec3(sizeOfBox, sizeOfBox, sizeOfBox));
+
+			skyBoxShader.setMat4("model", model);
+			skyBoxShader.setMat4("view", view);
+			skyBoxShader.setMat4("projection", projection);
+
+			//Привязка diffuse текстуры
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, skyBox);
+
+			//Отрисовка куба
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			
+			// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
+			glActiveTexture(GL_TEXTURE0);
+			glBindVertexArray(0);
+		}
+
+		//Отрисовка моделей
+		{
+			//Отрисовка модели рюкзака
+			ourShader.use();
+			model = glm::mat4(1.0f);
+			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+			ourShader.setMat4("model", model);
+			backpackModel.Draw(ourShader);
+
+			//Отрисовка банки
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			ourShader.setMat4("model", model);
+			bankaModel.Draw(ourShader);
+
+			//Отрисовка черепа
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			ourShader.setMat4("model", model);
+			skullModel.Draw(ourShader);
+
+		}
 		
-
-		//Привязка specular текстуры
-		glActiveTexture(GL_TEXTURE1);
-		ourShader.setInt("material.texture_specular1", 1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-
-		//Трансляция модели вниз и увеличение
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, -0.8f, 0.0f));
-		model = glm::scale(model, glm::vec3(13.0f, 13.0f, 13.0f));
-		ourShader.setMat4("model", model);
-
-		//Отрисовка пола
-		glBindVertexArray(floorVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
-
-		// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
-		glActiveTexture(GL_TEXTURE0);
-
-
-		//Отрисовка куба
-		//Привязка diffuse текстуры
-		glActiveTexture(GL_TEXTURE0);
-		ourShader.setInt("material.texture_diffuse1", 0);
-		glBindTexture(GL_TEXTURE_2D, skyBox);
-
-
-		/*
-		//Привязка specular текстуры
-		glActiveTexture(GL_TEXTURE1);
-		ourShader.setInt("material.texture_specular1", 1);
-		glBindTexture(GL_TEXTURE_2D, specularMap);
-		*/
-
-		//Трансляция модели вниз и увеличение
-		model = glm::mat4(1.0f);
-
-	    model = glm::scale(model, glm::vec3(sizeOfBox, sizeOfBox, sizeOfBox));
-		ourShader.setMat4("model", model);
-
-		//Отрисовка куба
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-
-		// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
-		glActiveTexture(GL_TEXTURE0);
-
-
 
 		//Если PointLight включен - отрисовывай вращающийся куб-источник света
 		if (isPointLightEnable)
@@ -410,7 +423,9 @@ int main()
 
 	// Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
 	glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &floorVAO);
 	glDeleteBuffers(1, &VBO);
+
 
 
 	// glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
@@ -432,17 +447,6 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-	if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{ 
-		sizeOfBox = sizeOfBox + 0.01f;
-		std::cout << sizeOfBox << "\n";
-	}
-		
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		sizeOfBox = sizeOfBox - 0.01f;
-		std::cout << sizeOfBox << "\n";
-	}
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция

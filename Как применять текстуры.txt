@@ -1,0 +1,26 @@
+1. Загрузка текстуры
+Функия loadTexture создаёт локатор текстуры, генерирует его с помощью GLFW.
+Настраивает параметры наложения текстуры и параметры фильтрации текстуры. Вовзвращает локатор.
+
+unsigned int texture1 =  loadTexture("./path");
+
+
+2. Указываем OpenGL, какой сэмплер к какому текстурному блоку принадлежит (это нужно сделать единожды) 
+ ourShader.use(); // не забудьте активировать шейдер перед настройкой uniform-переменных!  
+ ourShader.setInt("texture2", 1);
+ 
+ 
+3. Привязка текстур к соответствующим текстурным юнитам внутри while()
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texture2);
+
+4.  Рендеринг    
+		ourShader.use();
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		
+5. Очищение памяти после отрисовки
+	glBindVertexArray(0);
+	glActiveTexture(GL_TEXTURE0);
