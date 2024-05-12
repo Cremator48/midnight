@@ -80,7 +80,7 @@ int main()
 
 
 
-	// Указывание вершин (и буферов) и настройка вершинных атрибутов
+	// Указывание вершин (и буферов) и настройка вершинных атрибутов неба и лампочки
 	float vertices[] = {
 		// координаты        // нормали           // текстурные координаты
 	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f, 0.33f,   // 7  //Задний квадрат (закрашено)
@@ -135,6 +135,15 @@ int main()
 	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
+	float grassVertices[] = {
+		-0.5f, -0.5f, 0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // 0   // Передний квадрат (закрашено)
+		0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f, // 3
+		0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // 2
+		0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // 2
+	   -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f, // 1
+	   -0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f  // 0
+	};
+
 
 	//Настройка атрибутов вершин для скайбокса (и VBO для лампочки)
 	unsigned int VBO, VAO;
@@ -145,6 +154,7 @@ int main()
 
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 		//Координатный атрибут
@@ -157,6 +167,33 @@ int main()
 
 		glBindVertexArray(0);
 	}
+
+	unsigned int grassVAO, grassVBO;
+	//Настройка VBO и VAO для травы
+	{
+		glGenVertexArrays(1, &grassVAO);
+		glGenBuffers(1, &grassVBO);
+
+		glBindVertexArray(grassVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(grassVertices), grassVertices, GL_STATIC_DRAW);
+
+		//Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		// Атрибуты нормалей
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		// Атрибуты текстур
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+
+		glBindVertexArray(0);
+	}
+
 	
 	//Настройка атрибутов вершин для пола
 	unsigned int floorVAO;
@@ -217,6 +254,7 @@ int main()
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
 	unsigned int skyBox = loadTexture("../res/skybox.png");
+	unsigned int grassModel = loadTexture("../res/grass.png");
 
 	glm::vec3 pointLightPosition;
 
@@ -386,31 +424,58 @@ int main()
 		//Отрисовка моделей
 		{
 			//Отрисовка модели рюкзака
-			ourShader.use();
-			model = glm::mat4(1.0f);
-			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-			ourShader.setMat4("model", model);
-			backpackModel.Draw(ourShader);
-
-			//Отрисовка банки
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			ourShader.setMat4("model", model);
-			bankaModel.Draw(ourShader);
-
+			{
+				ourShader.use();
+				model = glm::mat4(1.0f);
+				model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+				ourShader.setMat4("model", model);
+				backpackModel.Draw(ourShader);
+			}
 			
 
+			//Отрисовка банки
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
+				model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				ourShader.setMat4("model", model);
+				bankaModel.Draw(ourShader);
+			}
 
 			//Отрисовка черепа
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-			model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
-			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-			ourShader.setMat4("model", model);
-			skullModel.Draw(ourShader);
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+				model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				ourShader.setMat4("model", model);
+				skullModel.Draw(ourShader);
+			}
+			
 
+			//Отрисовка травы
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(-2.0f, 0.0f, -1.0f));
+				ourShader.setMat4("model", model);
+
+				//Привязка diffuse текстуры
+				ourShader.setInt("material.texture_diffuse1", 0);
+				glBindTexture(GL_TEXTURE_2D, grassModel);
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, grassModel);
+
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+
+				ourShader.use();
+				glBindVertexArray(grassVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			
 
 		}
 		
@@ -501,8 +566,8 @@ unsigned int loadTexture(char const* path)
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
