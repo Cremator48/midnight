@@ -209,7 +209,6 @@ int main()
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
 	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs");
-	Shader StencilShader("../midnight/shader_1.vs", "../midnight/shaderOfStencil.fs");
 
 	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -223,8 +222,6 @@ int main()
 
 	//Вкючить буфер глубины
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -241,7 +238,7 @@ int main()
 
 		// Рендеринг фона
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//Настройки освещения
 		{
@@ -310,9 +307,6 @@ int main()
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
 		ourShader.setVec3("viewPos", camera.Position);
-
-		glStencilMask(0x00);
-
 
 		//Отрисовка пола
 		{
@@ -408,8 +402,6 @@ int main()
 
 			
 
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glStencilMask(0xFF);
 
 			//Отрисовка черепа
 			model = glm::mat4(1.0f);
@@ -419,22 +411,6 @@ int main()
 			ourShader.setMat4("model", model);
 			skullModel.Draw(ourShader);
 
-
-			glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-			glStencilMask(0x00);
-			glDisable(GL_DEPTH_TEST);
-
-			model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
-
-			StencilShader.use();
-			StencilShader.setMat4("model", model);
-			StencilShader.setMat4("view", view);
-			StencilShader.setMat4("projection", projection);
-			skullModel.Draw(StencilShader);
-
-			glStencilMask(0xFF);
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
-			glEnable(GL_DEPTH_TEST);
 
 		}
 		
