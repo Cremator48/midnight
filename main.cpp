@@ -36,9 +36,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
-bool isFlashlightEnable = false;
+bool isFlashlightEnable = true;
 bool isDirLightEnable = true;
-bool isPointLightEnable = false;
+bool isPointLightEnable = true;
 
 int main()
 {
@@ -80,7 +80,7 @@ int main()
 
 
 
-	// Указывание вершин (и буферов) и настройка вершинных атрибутов неба и лампочки
+	// Указывание вершин неба и лампочки
 	float vertices[] = {
 		// координаты        // нормали           // текстурные координаты
 	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f, 0.33f,   // 7  //Задний квадрат (закрашено)
@@ -126,6 +126,7 @@ int main()
 	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 0.66f   // 6
 	};
 
+	// Указывание вершин пола
 	float floorVertices[] = {
 	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	// Верхний квадрат
 		0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
@@ -135,7 +136,8 @@ int main()
 	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
 	};
 
-	float grassVertices[] = {
+	// Указывание вершин окна
+	float windowVertices[] = {
 		-0.5f, -0.5f, 0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // 0   // Передний квадрат (закрашено)
 		0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f, // 3
 		0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // 2
@@ -168,16 +170,16 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	unsigned int grassVAO, grassVBO;
-	//Настройка VBO и VAO для травы
+	//Настройка VBO и VAO для окна
+	unsigned int windowVAO, windowVBO;
 	{
-		glGenVertexArrays(1, &grassVAO);
-		glGenBuffers(1, &grassVBO);
+		glGenVertexArrays(1, &windowVAO);
+		glGenBuffers(1, &windowVBO);
 
-		glBindVertexArray(grassVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, grassVBO);
+		glBindVertexArray(windowVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, windowVBO);
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(grassVertices), grassVertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
 
 		//Координатный атрибут
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -194,7 +196,6 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	
 	//Настройка атрибутов вершин для пола
 	unsigned int floorVAO;
 	{
@@ -254,12 +255,22 @@ int main()
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
 	unsigned int skyBox = loadTexture("../res/skybox.png");
-	unsigned int grassModel = loadTexture("../res/grass.png");
+	unsigned int windowModel = loadTexture("../res/blending_transparent_window.png");
 
 	glm::vec3 pointLightPosition;
 
 	//Вкючить буфер глубины
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	std::vector<glm::vec3> windows = {
+		glm::vec3(-2.0f, 0.0f, -1.0f),
+		glm::vec3(-2.0f, 0.0f, -2.0f)
+	};
+
+	
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -454,26 +465,40 @@ int main()
 			}
 			
 
-			//Отрисовка травы
+			//Отрисовка окон
 			{
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(-2.0f, 0.0f, -1.0f));
-				ourShader.setMat4("model", model);
+				//Сортировка отрисовки полупрозрачных окон по дистанции (для рендера начная с самого далёкого окна)
+				std::map<float, glm::vec3> sorted;
+				for (unsigned int i = 0; i < windows.size(); i++)
+				{
+					float distance = glm::length(camera.Position - windows[i]);
+					sorted[distance] = windows[i];
+				}
 
+
+				
 				//Привязка diffuse текстуры
 				ourShader.setInt("material.texture_diffuse1", 0);
-				glBindTexture(GL_TEXTURE_2D, grassModel);
+				glBindTexture(GL_TEXTURE_2D, windowModel);
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, grassModel);
+				glBindTexture(GL_TEXTURE_2D, windowModel);
 
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, 0);
 
-
 				ourShader.use();
-				glBindVertexArray(grassVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
+				glBindVertexArray(windowVAO);
+
+				for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+				{
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, it->second);
+					ourShader.setMat4("model", model);
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+				}
+
+
 			}
 			
 
