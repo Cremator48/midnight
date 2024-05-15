@@ -43,8 +43,6 @@ bool isPointLightEnable = true;
 int main()
 {
 
-
-
 	std::cout << "git on windows!\n";
 
 	// glfw: инициализация и конфигурирование
@@ -62,14 +60,18 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(window);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetScrollCallback(window, scroll_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetKeyCallback(window, key_callback);
+
+	// callback-функции
+	{
+		glfwMakeContextCurrent(window);
+		glfwSetCursorPosCallback(window, mouse_callback);
+		glfwSetScrollCallback(window, scroll_callback);
+		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+		glfwSetKeyCallback(window, key_callback);
+	}
+	
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 
 	// glad: загрузка всех указателей на OpenGL-функции
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -77,7 +79,6 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-
 
 
 	// Указывание вершин неба и лампочки
@@ -265,22 +266,46 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
+	// Позиции окон
 	std::vector<glm::vec3> windows = {
 		glm::vec3(-2.0f, 0.0f, -1.0f),
 		glm::vec3(-2.0f, 0.0f, -2.0f)
 	};
 
-	
+	// отрисовывать кадр при каждом обновлении экрана 
+	glfwSwapInterval(1);
+
+	//Последний кадр
+
+
+	float lastTime = glfwGetTime(); // Переменная хранящая время начала работы программы
+	int nbFrames = 0;
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
+
+		
+		double currentTime = glfwGetTime(); // время текущего кадра с начала работы программы
+		nbFrames++;  
+		if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
+			// printf and reset timer
+			std::cout << "FPS: " << double(nbFrames) << "\n";
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
 
 
 		//отсчёт времени для нормализации скорости движения
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
+
+
+		
+
+		
 
 		// Обработка ввода
 		processInput(window);
