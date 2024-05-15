@@ -333,8 +333,7 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
 
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs");
@@ -370,6 +369,8 @@ int main()
 	screenShader.use();
 	screenShader.setInt("screenTexture", 0);
 
+	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -399,8 +400,8 @@ int main()
 
 			//Вкючить буфер глубины
 			glEnable(GL_DEPTH_TEST);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//	glEnable(GL_BLEND);
+		//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			// Рендеринг фона
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -586,8 +587,10 @@ int main()
 					skullModel.Draw(ourShader);
 				}
 
-
 				//Отрисовка окон
+
+				/*
+				
 				{
 					//Сортировка отрисовки полупрозрачных окон по дистанции (для рендера начная с самого далёкого окна)
 					std::map<float, glm::vec3> sorted;
@@ -622,14 +625,32 @@ int main()
 
 
 				}
-
+				*/
 
 			}
 
+			//Отрисовка камеры
+			{
+				
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 2.0f));
 
+				screenShader.use();
+				screenShader.setMat4("projection", projection);
+				screenShader.setMat4("view", view);
+				screenShader.setMat4("model", model);
+
+				screenShader.setInt("screenTexture", 0);
+				glBindVertexArray(frameVAO);
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+				
+			}
 
 		}
-	
+
 		// Рендеринг на экран
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -639,6 +660,9 @@ int main()
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			screenShader.use();
+			screenShader.setMat4("projection", glm::mat4(1.0f));
+			screenShader.setMat4("view", glm::mat4(1.0f));
+			screenShader.setMat4("model", glm::mat4(1.0f));
 			screenShader.setInt("screenTexture", 0);
 			glBindVertexArray(frameVAO);
 
@@ -646,6 +670,8 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
+
+		
 		
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
