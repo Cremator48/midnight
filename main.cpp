@@ -147,6 +147,28 @@ int main()
 	   -0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f  // 0
 	};
 
+	// Указывание вершин фрейм-прямоугольника
+	float frameVertices[] =
+	{
+		/*
+	   -0.5f, -0.5f,  0.0f, 0.0f,  0.0f, // 0   // Передний квадрат (закрашено)
+		0.5f, -0.5f,  0.0f, 1.0f,  0.0f, // 3
+		0.5f,  0.5f,  0.0f, 1.0f,  1.0f, // 2
+
+		0.5f,  0.5f,  0.0f, 1.0f,  1.0f, // 2
+	   -0.5f,  0.5f,  0.0f, 0.0f,  1.0f, // 1
+	   -0.5f, -0.5f,  0.0f, 0.0f,  0.0f  // 0
+	   */
+
+	   - 1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
+	};
+
 
 	//Настройка атрибутов вершин для скайбокса (и VBO для лампочки)
 	unsigned int VBO, VAO;
@@ -242,10 +264,80 @@ int main()
 		glBindVertexArray(0);
 	}
 
+
+	// Настройка Фрейм-буффера
+	unsigned int fbo;
+	unsigned int frameBuferTexture;
+	{
+		glGenFramebuffers(1, &fbo);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+
+		//Создание текстуры для фрейм-буфера
+		
+		{
+			
+			glGenTextures(1, &frameBuferTexture);
+			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
+
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+		//	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		}
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBuferTexture, 0);
+
+	//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, frameBuferTexture, 0);
+	}
+
+
+	// Настройка рендр-буфера
+	unsigned int rbo;
+	{
+		glGenRenderbuffers(1, &rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	// Настройка VAO и VBO для фреймбуфера
+	unsigned int frameVAO, frameVBO;
+	{
+		glGenVertexArrays(1, &frameVAO);
+		glGenBuffers(1, &frameVBO);
+
+		glBindVertexArray(frameVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, frameVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(frameVertices), frameVertices, GL_STATIC_DRAW);
+
+		//Координатный атрибут
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		// Атрибуты текстур
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		glBindVertexArray(0);
+	}
+
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
+	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
 	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs");
 
@@ -260,10 +352,7 @@ int main()
 
 	glm::vec3 pointLightPosition;
 
-	//Вкючить буфер глубины
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 
 
 	// Позиции окон
@@ -275,17 +364,16 @@ int main()
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
-	//Последний кадр
-
-
 	float lastTime = glfwGetTime(); // Переменная хранящая время начала работы программы
 	int nbFrames = 0;
+
+	screenShader.use();
+	screenShader.setInt("screenTexture", 0);
+
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
-
-		
 		double currentTime = glfwGetTime(); // время текущего кадра с начала работы программы
 		nbFrames++;  
 		if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
@@ -300,246 +388,279 @@ int main()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
-
-
-		
-
 		
 
 		// Обработка ввода
 		processInput(window);
 
-		// Рендеринг фона
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//Настройки освещения
+		// Рендеринг в кастомный-фреймбуфер
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		{
 
-			// Куб-не источник
-			ourShader.use();
-			ourShader.setFloat("material.shininess", 32.0f);
+			//Вкючить буфер глубины
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-			//[1] SpotLight
-			//Настройки цвета самого света
-			ourShader.setVec3("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-			ourShader.setVec3("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-			ourShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-			ourShader.setInt("isFlashlightEnable", isFlashlightEnable);
+			// Рендеринг фона
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-			//настройка затухания света
-			ourShader.setFloat("spotLight.constant", 1.0f);
-			ourShader.setFloat("spotLight.linear", 0.09f);
-			ourShader.setFloat("spotLight.quadratic", 0.032f);
 
-			//Настройка направления освещения + конуса прожектора
-			ourShader.setVec3("spotLight.position", camera.Position);
-			ourShader.setVec3("spotLight.direction", camera.Front);
-			ourShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-			ourShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+			//Настройки освещения
+			{
 
+				// Куб-не источник
+				ourShader.use();
+				ourShader.setFloat("material.shininess", 32.0f);
 
-			//[2] PointLight
-			ourShader.setInt("isPointLightEnable", isPointLightEnable);
-			ourShader.setVec3("pointLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-			ourShader.setVec3("pointLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-			ourShader.setVec3("pointLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+				//[1] SpotLight
+				//Настройки цвета самого света
+				ourShader.setVec3("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+				ourShader.setVec3("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+				ourShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-			//настройка затухания света
-			ourShader.setFloat("pointLight.constant", 1.0f);
-			ourShader.setFloat("pointLight.linear", 0.09f);
-			ourShader.setFloat("pointLight.quadratic", 0.032f);
-
-			//Настройка расположения источника света
-			float x = sin(glfwGetTime()) * 5.0f;
-			float y = 0.0f;
-			float z = cos(glfwGetTime()) * 5.0f;
-			pointLightPosition = glm::vec3(x, y, z);
-			ourShader.setVec3("pointLight.position", pointLightPosition);
+				ourShader.setInt("isFlashlightEnable", isFlashlightEnable);
 
 
-			//[3] DirLight
+				//настройка затухания света
+				ourShader.setFloat("spotLight.constant", 1.0f);
+				ourShader.setFloat("spotLight.linear", 0.09f);
+				ourShader.setFloat("spotLight.quadratic", 0.032f);
 
-			ourShader.setInt("isDirLightEnable", isDirLightEnable);
-			ourShader.setVec3("dirLight.direction", glm::vec3(3.0f, 3.0f, 3.0f));
-			ourShader.setVec3("dirLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-			ourShader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-			ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		}
-
-
-		//настройка основных матриц: вида и проекции
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 model;
-
-		//Передача основных матриц и позиции камеры шейдеру
-		ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
-		ourShader.setVec3("viewPos", camera.Position);
-
-		//Отрисовка пола
-		{
-			//Трансляция модели вниз и увеличение
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.0f, -0.8f, 0.0f));
-			model = glm::scale(model, glm::vec3(13.0f, 13.0f, 13.0f));
-			ourShader.setMat4("model", model);
-
-			//Привязка diffuse текстуры
-			ourShader.setInt("material.texture_diffuse1", 0);
-			glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-			//Привязка specular текстуры
-			ourShader.setInt("material.texture_specular1", 1);
-			glBindTexture(GL_TEXTURE_2D, specularMap);
+				//Настройка направления освещения + конуса прожектора
+				ourShader.setVec3("spotLight.position", camera.Position);
+				ourShader.setVec3("spotLight.direction", camera.Front);
+				ourShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+				ourShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
 
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, diffuseMap);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, specularMap);
+				//[2] PointLight
+				ourShader.setInt("isPointLightEnable", isPointLightEnable);
+				ourShader.setVec3("pointLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+				ourShader.setVec3("pointLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+				ourShader.setVec3("pointLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
+				//настройка затухания света
+				ourShader.setFloat("pointLight.constant", 1.0f);
+				ourShader.setFloat("pointLight.linear", 0.09f);
+				ourShader.setFloat("pointLight.quadratic", 0.032f);
+
+				//Настройка расположения источника света
+				float x = sin(glfwGetTime()) * 5.0f;
+				float y = 0.0f;
+				float z = cos(glfwGetTime()) * 5.0f;
+				pointLightPosition = glm::vec3(x, y, z);
+				ourShader.setVec3("pointLight.position", pointLightPosition);
+
+
+				//[3] DirLight
+
+				ourShader.setInt("isDirLightEnable", isDirLightEnable);
+				ourShader.setVec3("dirLight.direction", glm::vec3(3.0f, 3.0f, 3.0f));
+				ourShader.setVec3("dirLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+				ourShader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+				ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			}
+
+
+			//настройка основных матриц: вида и проекции
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 view = camera.GetViewMatrix();
+			glm::mat4 model;
+
+			//Передача основных матриц и позиции камеры шейдеру
+			{
+				ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
+				ourShader.setMat4("projection", projection);
+				ourShader.setMat4("view", view);
+				ourShader.setVec3("viewPos", camera.Position);
+			}
+			
 
 			//Отрисовка пола
-			ourShader.use();
-			glBindVertexArray(floorVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-			
-			// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
-			glBindVertexArray(0);
-			glActiveTexture(GL_TEXTURE0);
-
-		}
-
-		// Отрисовка неба
-		{
-			skyBoxShader.use();
-			skyBoxShader.setInt("myTexture", 0);
-
-			//Трансляция модели вниз и увеличение
-			model = glm::mat4(1.0f);
-			model = glm::scale(model, glm::vec3(sizeOfBox, sizeOfBox, sizeOfBox));
-
-			skyBoxShader.setMat4("model", model);
-			skyBoxShader.setMat4("view", view);
-			skyBoxShader.setMat4("projection", projection);
-
-			//Привязка diffuse текстуры
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, skyBox);
-
-			//Отрисовка куба
-			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			
-			// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
-			glActiveTexture(GL_TEXTURE0);
-			glBindVertexArray(0);
-		}
-
-		//Если PointLight включен - отрисовывай вращающийся куб-источник света
-		if (isPointLightEnable)
-		{
-			glBindVertexArray(lightVAO);
-			//Отрисовка куба-источника света
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, pointLightPosition);
-			model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-			lightCubeShader.use();
-			lightCubeShader.setMat4("model", model);
-			lightCubeShader.setMat4("projection", projection);
-			lightCubeShader.setMat4("view", view);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-
-		//Отрисовка моделей
-		{
-			//Отрисовка модели рюкзака
 			{
-				ourShader.use();
+				//Трансляция модели вниз и увеличение
 				model = glm::mat4(1.0f);
-				model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+				model = glm::translate(model, glm::vec3(0.0f, -0.8f, 0.0f));
+				model = glm::scale(model, glm::vec3(13.0f, 13.0f, 13.0f));
 				ourShader.setMat4("model", model);
-				backpackModel.Draw(ourShader);
-			}
-			
 
-			//Отрисовка банки
-			{
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
-				model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
-				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				ourShader.setMat4("model", model);
-				bankaModel.Draw(ourShader);
-			}
-
-			//Отрисовка черепа
-			{
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-				model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
-				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				ourShader.setMat4("model", model);
-				skullModel.Draw(ourShader);
-			}
-			
-
-			//Отрисовка окон
-			{
-				//Сортировка отрисовки полупрозрачных окон по дистанции (для рендера начная с самого далёкого окна)
-				std::map<float, glm::vec3> sorted;
-				for (unsigned int i = 0; i < windows.size(); i++)
-				{
-					float distance = glm::length(camera.Position - windows[i]);
-					sorted[distance] = windows[i];
-				}
-
-
-				
 				//Привязка diffuse текстуры
 				ourShader.setInt("material.texture_diffuse1", 0);
-				glBindTexture(GL_TEXTURE_2D, windowModel);
+				glBindTexture(GL_TEXTURE_2D, diffuseMap);
+
+				//Привязка specular текстуры
+				ourShader.setInt("material.texture_specular1", 1);
+				glBindTexture(GL_TEXTURE_2D, specularMap);
+
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, windowModel);
-
+				glBindTexture(GL_TEXTURE_2D, diffuseMap);
 				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, 0);
+				glBindTexture(GL_TEXTURE_2D, specularMap);
 
+
+				//Отрисовка пола
 				ourShader.use();
-				glBindVertexArray(windowVAO);
+				glBindVertexArray(floorVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
 
-				for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+				// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
+				glBindVertexArray(0);
+				glActiveTexture(GL_TEXTURE0);
+
+			}
+
+			// Отрисовка неба
+			{
+				skyBoxShader.use();
+				skyBoxShader.setInt("myTexture", 0);
+
+				//Трансляция модели вниз и увеличение
+				model = glm::mat4(1.0f);
+				model = glm::scale(model, glm::vec3(sizeOfBox, sizeOfBox, sizeOfBox));
+
+				skyBoxShader.setMat4("model", model);
+				skyBoxShader.setMat4("view", view);
+				skyBoxShader.setMat4("projection", projection);
+
+				//Привязка diffuse текстуры
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, skyBox);
+
+				//Отрисовка куба
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+
+				// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
+				glActiveTexture(GL_TEXTURE0);
+				glBindVertexArray(0);
+			}
+
+			//Если PointLight включен - отрисовывай вращающийся куб-источник света
+			if (isPointLightEnable)
+			{
+				glBindVertexArray(lightVAO);
+				//Отрисовка куба-источника света
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, pointLightPosition);
+				model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+				lightCubeShader.use();
+				lightCubeShader.setMat4("model", model);
+				lightCubeShader.setMat4("projection", projection);
+				lightCubeShader.setMat4("view", view);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			//Отрисовка моделей
+			{
+				//Отрисовка модели рюкзака
+				{
+					ourShader.use();
+					model = glm::mat4(1.0f);
+					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+					ourShader.setMat4("model", model);
+					backpackModel.Draw(ourShader);
+				}
+
+
+				//Отрисовка банки
 				{
 					model = glm::mat4(1.0f);
-					model = glm::translate(model, it->second);
+					model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
+					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 					ourShader.setMat4("model", model);
-					glDrawArrays(GL_TRIANGLES, 0, 6);
+					bankaModel.Draw(ourShader);
+				}
+
+				//Отрисовка черепа
+				{
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+					model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
+					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					ourShader.setMat4("model", model);
+					skullModel.Draw(ourShader);
+				}
+
+
+				//Отрисовка окон
+				{
+					//Сортировка отрисовки полупрозрачных окон по дистанции (для рендера начная с самого далёкого окна)
+					std::map<float, glm::vec3> sorted;
+					for (unsigned int i = 0; i < windows.size(); i++)
+					{
+						float distance = glm::length(camera.Position - windows[i]);
+						sorted[distance] = windows[i];
+					}
+
+
+
+					//Привязка diffuse текстуры
+					ourShader.setInt("material.texture_diffuse1", 0);
+					glBindTexture(GL_TEXTURE_2D, windowModel);
+
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, windowModel);
+
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, 0);
+
+					ourShader.use();
+					glBindVertexArray(windowVAO);
+
+					for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+					{
+						model = glm::mat4(1.0f);
+						model = glm::translate(model, it->second);
+						ourShader.setMat4("model", model);
+						glDrawArrays(GL_TRIANGLES, 0, 6);
+					}
+
+
 				}
 
 
 			}
-			
 
+
+
+		}
+	
+		// Рендеринг на экран
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glDisable(GL_DEPTH_TEST);
+
+			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			screenShader.use();
+			screenShader.setInt("screenTexture", 0);
+			glBindVertexArray(frameVAO);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 		
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
 	}
 
 	// Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
+	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &windowVBO);
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteVertexArrays(1, &floorVAO);
-	glDeleteBuffers(1, &VBO);
+	glDeleteVertexArrays(1, &windowVAO);
+	glDeleteFramebuffers(1, &fbo);
 
 
 
