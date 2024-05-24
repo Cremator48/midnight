@@ -14,6 +14,9 @@
 #include "Mesh.h"
 #include "model.h"
 
+
+
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -22,14 +25,13 @@ unsigned int loadTexture(char const* path);
 void key_callback(GLFWwindow* window, int key, int action, int scancode, int mods);
 
 // Константы
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 900;
 float sizeOfBox = 50.0f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
-
 
 bool firstMouse = true;
 
@@ -43,14 +45,16 @@ bool isPointLightEnable = true;
 int main()
 {
 
+
 	std::cout << "git on windows!\n";
 
 	// glfw: инициализация и конфигурирование
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+	{
+		glfwInit();
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	}
 
 	// glfw: создание окна
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
@@ -68,11 +72,9 @@ int main()
 		glfwSetScrollCallback(window, scroll_callback);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		glfwSetKeyCallback(window, key_callback);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 	
-
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
 	// glad: загрузка всех указателей на OpenGL-функции
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -80,86 +82,73 @@ int main()
 		return -1;
 	}
 
+	// Указывание вершин лампочки
+	float vertices[] =
+	{
+		// Задняя грань
+	   -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // нижняя-левая
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // нижняя-правая    
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая              
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая
+	   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // верхняя-левая
+	   -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // нижняя-левая   
 
-	// Указывание вершин неба и лампочки
-	float vertices[] = {
-		// координаты        // нормали           // текстурные координаты
-	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f, 0.33f,   // 7  //Задний квадрат (закрашено)
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.5f,  0.33f,   // 4
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.5f,  0.66f,   // 5
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.5f,  0.66f,   // 5
-	   -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f,  0.66f,  // 6
-	   -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.75f,  0.33f,  // 7
+	   // Передняя грань
+	  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая
+	   0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // верхняя-правая
+	   0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // нижняя-правая        
+	   0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // верхняя-правая
+	  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая
+	  -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // верхняя-левая  
 
-	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.33f, // 0   // Передний квадрат (закрашено)
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.25f, 0.33f, // 3
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.25f, 0.66f, // 2
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.25f, 0.66f, // 2
-	   -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.66f, // 1
-	   -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.33f, // 0
+	  // Грань слева
+	 -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-правая
+	 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-левая
+	 -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-левая       
+	 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-левая
+	 -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-правая
+	 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-правая
 
-	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.66f, // 12  // Левый квадрат (закрашено)
-	   -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.75f, 0.66f, // 6
-	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.75f, 0.33f, // 7
-	   -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.75f, 0.33f, // 7
-	   -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.33f, // 13
-	   -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.66f, // 12
+	 // Грань справа
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-левая
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая      
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-правая          
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-правая
+	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-левая
 
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.25f, 0.66f,	// 2		// Правый квадрат
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.66f, // 5
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.33f,	// 4
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.5f,  0.33f,	// 4
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.25f, 0.33f,	// 3
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.25f, 0.66f, // 2
+	 // Нижняя грань          
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // верхняя-правая
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // нижняя-левая
+	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // верхняя-левая        
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // нижняя-левая
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // верхняя-правая
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-правая
 
-	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.75f, 0.33f,  // 7        // Нижний квадрат
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.5f,  0.33f,  // 4
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.5f,  0.0f,   // 9
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.5f,  0.0f,   // 9
-	   -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.75f, 0.0f,   // 8
-	   -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.75f, 0.33f,  // 7
-
-	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 0.66f,	 // 6		// Верхний квадрат
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  0.66f,  // 5
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  1.0f,   // 10
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.5f,  1.0f,   // 10
-	   -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 1.0f,   // 11
-	   -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.75f, 0.66f   // 6
+	// Верхняя грань
+   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // верхняя-левая
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // нижняя-правая                 
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // нижняя-правая
+   -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая  
+   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // верхняя-левая              
 	};
 
 	// Указывание вершин пола
 	float floorVertices[] = {
-	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	// Верхний квадрат
-		0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-	   -0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-	};
+	   // Координаты         // Нормали           // Текст. координаты	
+	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	//0	
+		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2		// Верхний квадрат
+		0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,	//1
 
-	// Указывание вершин окна
-	float windowVertices[] = {
-		-0.5f, -0.5f, 0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f, // 0   // Передний квадрат (закрашено)
-		0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f, // 3
-		0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // 2
-		0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f, // 2
-	   -0.5f,  0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f, // 1
-	   -0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f  // 0
+	   -0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,	//3
+	    0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2
+	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f	//0  
 	};
 
 	// Указывание вершин фрейм-прямоугольника
 	float frameVertices[] =
 	{
-		/*
-	   -0.5f, -0.5f,  0.0f, 0.0f,  0.0f, // 0   // Передний квадрат (закрашено)
-		0.5f, -0.5f,  0.0f, 1.0f,  0.0f, // 3
-		0.5f,  0.5f,  0.0f, 1.0f,  1.0f, // 2
-
-		0.5f,  0.5f,  0.0f, 1.0f,  1.0f, // 2
-	   -0.5f,  0.5f,  0.0f, 0.0f,  1.0f, // 1
-	   -0.5f, -0.5f,  0.0f, 0.0f,  0.0f  // 0
-	   */
-
 	   - 1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,
 		 1.0f, -1.0f,  1.0f, 0.0f,
@@ -169,60 +158,11 @@ int main()
 		 1.0f,  1.0f,  1.0f, 1.0f
 	};
 
-
-	//Настройка атрибутов вершин для скайбокса (и VBO для лампочки)
-	unsigned int VBO, VAO;
-	{
-		//Данные для скайбокса
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-
-		glBindVertexArray(VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-
-		// Атрибуты текстур
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		glBindVertexArray(0);
-	}
-
-	//Настройка VBO и VAO для окна
-	unsigned int windowVAO, windowVBO;
-	{
-		glGenVertexArrays(1, &windowVAO);
-		glGenBuffers(1, &windowVBO);
-
-		glBindVertexArray(windowVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, windowVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(windowVertices), windowVertices, GL_STATIC_DRAW);
-
-		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-
-		// Атрибуты нормалей
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		// Атрибуты текстур
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-		glEnableVertexAttribArray(2);
-
-		glBindVertexArray(0);
-	}
-
 	//Настройка атрибутов вершин для пола
 	unsigned int floorVAO;
+	unsigned int floorVBO; // НЕ УДАЛЯЙ VBO РАНЬШЕ ОКОНЧАНИЯ ПРОГРАММЫ. ИНАЧЕ ОН ОТОБРАЖАТЬ ОБЪЕКТ НЕ БУДЕТ
 	{
-		unsigned int floorVBO;
+		
 		glGenVertexArrays(1, &floorVAO);
 		glGenBuffers(1, &floorVBO);
 
@@ -242,23 +182,22 @@ int main()
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 		glBindVertexArray(0);
-
-		glDeleteBuffers(1, &floorVBO);
 	}
 	
 	// Настройка атрибутов вершин для лампочки
-	unsigned int lightVAO;
+	unsigned int lightVAO, lightVBO;
 	{
 		//Настройка куба освещения
 		glGenVertexArrays(1, &lightVAO);
+		glGenBuffers(1, &lightVBO);
 
 		glBindVertexArray(lightVAO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
 
 		glBindVertexArray(0);
@@ -274,35 +213,27 @@ int main()
 
 
 		//Создание текстуры для фрейм-буфера
-		
-		{
-			
+		{			
 			glGenTextures(1, &frameBuferTexture);
 			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
 
-		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
-		//	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0,GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
 		}
 
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBuferTexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBuferTexture, 0);
 
-	//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, frameBuferTexture, 0);
 	}
-
 
 	// Настройка рендр-буфера
 	unsigned int rbo;
 	{
 		glGenRenderbuffers(1, &rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
@@ -333,12 +264,9 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	
-
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
-	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs");
 
 	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -346,20 +274,9 @@ int main()
 
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
-	unsigned int skyBox = loadTexture("../res/skybox.png");
-	unsigned int windowModel = loadTexture("../res/blending_transparent_window.png");
 
 	glm::vec3 pointLightPosition;
-
 	
-
-
-	// Позиции окон
-	std::vector<glm::vec3> windows = {
-		glm::vec3(-2.0f, 0.0f, -1.0f),
-		glm::vec3(-2.0f, 0.0f, -2.0f)
-	};
-
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
@@ -384,7 +301,6 @@ int main()
 			lastTime += 1.0;
 		}
 
-
 		//отсчёт времени для нормализации скорости движения
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
@@ -394,20 +310,20 @@ int main()
 		// Обработка ввода
 		processInput(window);
 
+		glEnable(GL_CULL_FACE); //Включить режим отсечения граней
+		glFrontFace(GL_CCW);	// Определение "задних" граней против часовой стрелки (GL_CW по часовой)
+		glCullFace(GL_BACK);	// отсечение задних граней
+
 		// Рендеринг в кастомный-фреймбуфер
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		{
 
 			//Вкючить буфер глубины
 			glEnable(GL_DEPTH_TEST);
-		//	glEnable(GL_BLEND);
-		//	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			// Рендеринг фона
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
 
 			//Настройки освещения
 			{
@@ -465,7 +381,6 @@ int main()
 				ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 			}
 
-
 			//настройка основных матриц: вида и проекции
 			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 			glm::mat4 view = camera.GetViewMatrix();
@@ -479,7 +394,6 @@ int main()
 				ourShader.setVec3("viewPos", camera.Position);
 			}
 			
-
 			//Отрисовка пола
 			{
 				//Трансляция модели вниз и увеличение
@@ -514,32 +428,6 @@ int main()
 
 			}
 
-			// Отрисовка неба
-			{
-				skyBoxShader.use();
-				skyBoxShader.setInt("myTexture", 0);
-
-				//Трансляция модели вниз и увеличение
-				model = glm::mat4(1.0f);
-				model = glm::scale(model, glm::vec3(sizeOfBox, sizeOfBox, sizeOfBox));
-
-				skyBoxShader.setMat4("model", model);
-				skyBoxShader.setMat4("view", view);
-				skyBoxShader.setMat4("projection", projection);
-
-				//Привязка diffuse текстуры
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, skyBox);
-
-				//Отрисовка куба
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-
-				// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
-				glActiveTexture(GL_TEXTURE0);
-				glBindVertexArray(0);
-			}
-
 			//Если PointLight включен - отрисовывай вращающийся куб-источник света
 			if (isPointLightEnable)
 			{
@@ -566,7 +454,6 @@ int main()
 					backpackModel.Draw(ourShader);
 				}
 
-
 				//Отрисовка банки
 				{
 					model = glm::mat4(1.0f);
@@ -586,67 +473,6 @@ int main()
 					ourShader.setMat4("model", model);
 					skullModel.Draw(ourShader);
 				}
-
-				//Отрисовка окон
-
-				/*
-				
-				{
-					//Сортировка отрисовки полупрозрачных окон по дистанции (для рендера начная с самого далёкого окна)
-					std::map<float, glm::vec3> sorted;
-					for (unsigned int i = 0; i < windows.size(); i++)
-					{
-						float distance = glm::length(camera.Position - windows[i]);
-						sorted[distance] = windows[i];
-					}
-
-
-
-					//Привязка diffuse текстуры
-					ourShader.setInt("material.texture_diffuse1", 0);
-					glBindTexture(GL_TEXTURE_2D, windowModel);
-
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, windowModel);
-
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D, 0);
-
-					ourShader.use();
-					glBindVertexArray(windowVAO);
-
-					for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-					{
-						model = glm::mat4(1.0f);
-						model = glm::translate(model, it->second);
-						ourShader.setMat4("model", model);
-						glDrawArrays(GL_TRIANGLES, 0, 6);
-					}
-
-
-				}
-				*/
-
-			}
-
-			//Отрисовка камеры
-			{
-				
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 2.0f));
-
-				screenShader.use();
-				screenShader.setMat4("projection", projection);
-				screenShader.setMat4("view", view);
-				screenShader.setMat4("model", model);
-
-				screenShader.setInt("screenTexture", 0);
-				glBindVertexArray(frameVAO);
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-				
 			}
 
 		}
@@ -657,7 +483,7 @@ int main()
 			glDisable(GL_DEPTH_TEST);
 
 			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT);
 
 			screenShader.use();
 			screenShader.setMat4("projection", glm::mat4(1.0f));
@@ -671,9 +497,6 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
-		
-		
-
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -681,14 +504,11 @@ int main()
 	}
 
 	// Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
-	glDeleteBuffers(1, &VBO);
-	glDeleteBuffers(1, &windowVBO);
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteVertexArrays(1, &floorVAO);
-	glDeleteVertexArrays(1, &windowVAO);
+	glDeleteVertexArrays(1, &lightVAO);
+	glDeleteBuffers(1, &lightVBO);
 	glDeleteFramebuffers(1, &fbo);
-
-
+	glDeleteVertexArrays(1, &floorVAO);
+	glDeleteBuffers(1, &floorVBO);
 
 	// glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
 	glfwTerminate();

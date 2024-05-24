@@ -145,18 +145,18 @@ vec3 calcPointLight(PointLight pontLight, vec3 normal, vec3 fragPos, vec3 viewDi
 {
     vec3 lightDir = normalize(pontLight.position - fragPos);
  
-    // Рассеянное затенение
+    // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
  
-    // Отраженное затенение
+    // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
- 
-    // Затухание
+
+    /* Затухание */
     float distance = length(pontLight.position - fragPos);
     float attenuation = 1.0 / (pontLight.constant + pontLight.linear * distance + pontLight.quadratic * (distance * distance));    
  
-    // Комбинируем результаты
+    // Combination of results
     vec3 ambient = pontLight.ambient * vec3(texture(material.texture_diffuse1, TexCoords));
     vec3 diffuse = pontLight.diffuse * diff * vec3(texture(material.texture_diffuse1, TexCoords));
     vec3 specular = pontLight.specular * spec * vec3(texture(material.texture_specular1, TexCoords).rrr);
@@ -169,15 +169,15 @@ vec3 calcPointLight(PointLight pontLight, vec3 normal, vec3 fragPos, vec3 viewDi
 vec3 calcDirLight(DirLight dirLight, vec3 normal, vec3 viewDir, Material material)
 {
     vec3 lightDir = normalize(-dirLight.direction);
- 
-    // Рассеянное затенение
+
+    // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
  
-    // Отраженное затенение
+    // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
  
-    // Комбинируем результаты
+    // Combination of results
     vec3 ambient = dirLight.ambient * texture(material.texture_diffuse1, TexCoords).rgb;
     vec3 diffuse = dirLight.diffuse * diff * texture(material.texture_diffuse1, TexCoords).rgb;
     vec3 specular = dirLight.specular * spec * texture(material.texture_diffuse1, TexCoords).rrr;
