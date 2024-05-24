@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <vector>
 #include "Shader_class.h"
 #include "stb_image.h"
 
@@ -23,6 +24,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(char const* path);
 void key_callback(GLFWwindow* window, int key, int action, int scancode, int mods);
+unsigned int loadCubemap(vector<std::string> faces);
 
 // Константы
 const unsigned int SCR_WIDTH = 1600;
@@ -74,7 +76,7 @@ int main()
 		glfwSetKeyCallback(window, key_callback);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
-	
+
 	// glad: загрузка всех указателей на OpenGL-функции
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -136,20 +138,20 @@ int main()
 
 	// Указывание вершин пола
 	float floorVertices[] = {
-	   // Координаты         // Нормали           // Текст. координаты	
-	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	//0	
-		0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2		// Верхний квадрат
-		0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,	//1
+		// Координаты         // Нормали           // Текст. координаты	
+		-0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	//0	
+		 0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2		// Верхний квадрат
+		 0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,	//1
 
-	   -0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,	//3
-	    0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2
-	   -0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f	//0  
+		-0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,	//3
+		 0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2
+		-0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f	//0  
 	};
 
 	// Указывание вершин фрейм-прямоугольника
 	float frameVertices[] =
 	{
-	   - 1.0f,  1.0f,  0.0f, 1.0f,
+	   -1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,
 		 1.0f, -1.0f,  1.0f, 0.0f,
 
@@ -162,7 +164,7 @@ int main()
 	unsigned int floorVAO;
 	unsigned int floorVBO; // НЕ УДАЛЯЙ VBO РАНЬШЕ ОКОНЧАНИЯ ПРОГРАММЫ. ИНАЧЕ ОН ОТОБРАЖАТЬ ОБЪЕКТ НЕ БУДЕТ
 	{
-		
+
 		glGenVertexArrays(1, &floorVAO);
 		glGenBuffers(1, &floorVBO);
 
@@ -183,7 +185,7 @@ int main()
 		glEnableVertexAttribArray(2);
 		glBindVertexArray(0);
 	}
-	
+
 	// Настройка атрибутов вершин для лампочки
 	unsigned int lightVAO, lightVBO;
 	{
@@ -213,11 +215,11 @@ int main()
 
 
 		//Создание текстуры для фрейм-буфера
-		{			
+		{
 			glGenTextures(1, &frameBuferTexture);
 			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
 
-		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -264,9 +266,100 @@ int main()
 		glBindVertexArray(0);
 	}
 
+
+	// Вершины для скайбокса
+	float skyboxVertices[] = {
+	-1.0f,  1.0f, -1.0f,  //0
+	-1.0f, -1.0f, -1.0f,  //1
+	 1.0f, -1.0f, -1.0f,  //2
+
+	 1.0f, -1.0f, -1.0f,  //2
+	 1.0f,  1.0f, -1.0f,  //3
+	-1.0f,  1.0f, -1.0f,  //0
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	-1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f
+	};
+
+	// Настройка VAO и VBO для скайбокса
+	unsigned int skyboxVAO, skyboxVBO;
+	{
+		glGenVertexArrays(1, &skyboxVAO);
+		glGenBuffers(1, &skyboxVBO);
+
+		glBindVertexArray(skyboxVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+		//Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		glBindVertexArray(0);
+	}
+
+	// Создание CubeMap-текстуры
+	vector<std::string> faces
+	{
+			"right.jpg",
+			"left.jpg",
+			"top.jpg",
+			"bottom.jpg",
+			"front.jpg",
+			"back.jpg"
+	};
+
+	for (int i = 0; i < faces.size(); i++)
+	{
+		faces[i].insert(0, "../res/skybox/");
+	}
+
+	for (int i = 0; i < faces.size(); i++)
+	{
+		std::cout << i << " " << faces[i] << "\n";
+	}
+
+	unsigned int cubemapTexture = loadCubemap(faces);
+
+
+
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs");
 	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
+	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs");
 
 	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -276,7 +369,7 @@ int main()
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
 
 	glm::vec3 pointLightPosition;
-	
+
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
@@ -289,11 +382,13 @@ int main()
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+
+
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
 		double currentTime = glfwGetTime(); // время текущего кадра с начала работы программы
-		nbFrames++;  
+		nbFrames++;
 		if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
 			// printf and reset timer
 			std::cout << "FPS: " << double(nbFrames) << "\n";
@@ -305,25 +400,31 @@ int main()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		
+
 
 		// Обработка ввода
 		processInput(window);
 
 		glEnable(GL_CULL_FACE); //Включить режим отсечения граней
-		glFrontFace(GL_CCW);	// Определение "задних" граней против часовой стрелки (GL_CW по часовой)
 		glCullFace(GL_BACK);	// отсечение задних граней
 
 		// Рендеринг в кастомный-фреймбуфер
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		{
-
 			//Вкючить буфер глубины
 			glEnable(GL_DEPTH_TEST);
 
 			// Рендеринг фона
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			//настройка основных матриц: вида и проекции
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 view = camera.GetViewMatrix();
+			glm::mat4 model;
+
+			
+
 
 			//Настройки освещения
 			{
@@ -381,11 +482,7 @@ int main()
 				ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 			}
 
-			//настройка основных матриц: вида и проекции
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-			glm::mat4 view = camera.GetViewMatrix();
-			glm::mat4 model;
-
+			
 			//Передача основных матриц и позиции камеры шейдеру
 			{
 				ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
@@ -393,7 +490,7 @@ int main()
 				ourShader.setMat4("view", view);
 				ourShader.setVec3("viewPos", camera.Position);
 			}
-			
+
 			//Отрисовка пола
 			{
 				//Трансляция модели вниз и увеличение
@@ -475,6 +572,29 @@ int main()
 				}
 			}
 
+
+			// Рендеринг скайбокса
+			{
+				glDepthFunc(GL_LEQUAL);
+
+				skyBoxShader.use();
+				skyBoxShader.setMat4("projection", projection);
+
+				view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // убираем из матрицы вида секцию, отвечающую за операцию трансляции
+				skyBoxShader.setMat4("view", view);
+
+
+				glBindVertexArray(skyboxVAO);
+
+				skyBoxShader.setInt("skybox", 0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+
+				glDepthFunc(GL_LESS);
+			}
+
+
 		}
 
 		// Рендеринг на экран
@@ -500,7 +620,7 @@ int main()
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-		
+
 	}
 
 	// Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
@@ -614,4 +734,36 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		isPointLightEnable = !isPointLightEnable;
 	}
 
+}
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
 }
