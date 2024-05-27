@@ -160,6 +160,92 @@ int main()
 		 1.0f,  1.0f,  1.0f, 1.0f
 	};
 
+	// Вершины зеркального куба
+	float mirrorCubeVertices[] = {
+	
+
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 2	// Дальняя грань (против часовой)
+	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 1
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 0
+
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 0
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 3
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 2
+	/*--------------------------------------------------------------------*/
+
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 4	// Ближняя грань (против часовой)
+	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 5
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 6
+
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 6
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 7
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 4
+
+	/*--------------------------------------------------------------------*/
+
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	// 7	// Левая грань (против часовой)
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	// 3
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	// 0
+
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	// 0
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	// 4
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	// 7
+
+	/*--------------------------------------------------------------------*/
+
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	// 1	// Правая грань (против часовой)
+	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	// 2
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	// 6	
+	 
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	// 6
+	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	// 5
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	// 1
+
+	 /*--------------------------------------------------------------------*/
+
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	// 0	// Нижняя грань (против часовой)
+	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	// 1
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	// 5
+
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	// 5
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	// 4
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	// 0
+
+	/*--------------------------------------------------------------------*/
+
+	0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	// 6	// Верхняя грань (против часовой)
+	0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	// 2
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	// 3	
+	
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	// 3
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	// 7
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f	// 6
+	};
+
+
+	// НАстройка VAO и VBO для зеркального куба
+	unsigned int mirrorVAO, mirrorVBO;
+	{
+		glGenVertexArrays(1, &mirrorVAO);
+		glGenBuffers(1, &mirrorVBO);
+
+		glBindVertexArray(mirrorVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, mirrorVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(mirrorCubeVertices), mirrorCubeVertices, GL_STATIC_DRAW);
+
+		//Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		// Атрибуты нормалей
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		glBindVertexArray(0);
+	}
+	
+
+
 	//Настройка атрибутов вершин для пола
 	unsigned int floorVAO;
 	unsigned int floorVBO; // НЕ УДАЛЯЙ VBO РАНЬШЕ ОКОНЧАНИЯ ПРОГРАММЫ. ИНАЧЕ ОН ОТОБРАЖАТЬ ОБЪЕКТ НЕ БУДЕТ
@@ -347,11 +433,6 @@ int main()
 		faces[i].insert(0, "../res/skybox/");
 	}
 
-	for (int i = 0; i < faces.size(); i++)
-	{
-		std::cout << i << " " << faces[i] << "\n";
-	}
-
 	unsigned int cubemapTexture = loadCubemap(faces);
 
 
@@ -360,10 +441,11 @@ int main()
 	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs");
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs");
 	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs");
+	Shader mirrorShader("../midnight/mirrorShader.vs", "../midnight/mirrorShader.fs");
 
-	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	Model backpackModel("../res/models/backpack/backpack.obj", aiProcess_Triangulate | /*aiProcess_FlipUVs | */  aiProcess_CalcTangentSpace);
+//	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+//	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+//	Model backpackModel("../res/models/backpack/backpack.obj", aiProcess_Triangulate | /*aiProcess_FlipUVs | */  aiProcess_CalcTangentSpace);
 
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
@@ -407,6 +489,7 @@ int main()
 
 		glEnable(GL_CULL_FACE); //Включить режим отсечения граней
 		glCullFace(GL_BACK);	// отсечение задних граней
+		glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 
 		// Рендеринг в кастомный-фреймбуфер
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -541,6 +624,9 @@ int main()
 			}
 
 			//Отрисовка моделей
+			/*
+
+			
 			{
 				//Отрисовка модели рюкзака
 				{
@@ -572,6 +658,26 @@ int main()
 				}
 			}
 
+			*/
+
+			// Отрисовка зеркального куба
+			{
+				mirrorShader.use();
+				mirrorShader.setMat4("view", view);
+
+				model = glm::mat4(1.0f);
+
+				mirrorShader.setMat4("model", model);
+				mirrorShader.setMat4("projection", projection);
+
+				mirrorShader.setVec3("cameraPos", camera.Position);
+
+				mirrorShader.setInt("skybox", 0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+
+				glBindVertexArray(mirrorVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
 
 			// Рендеринг скайбокса
 			{
@@ -583,12 +689,10 @@ int main()
 				view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // убираем из матрицы вида секцию, отвечающую за операцию трансляции
 				skyBoxShader.setMat4("view", view);
 
-
 				glBindVertexArray(skyboxVAO);
-
 				skyBoxShader.setInt("skybox", 0);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 
+				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 
 				glDepthFunc(GL_LESS);
