@@ -42,10 +42,12 @@ struct PointLight {
     vec3 diffuse;
     vec3 specular;
 };  
-
-in vec3 Normal;  
-in vec3 FragPos;
+ 
 in vec2 TexCoords;
+in vec3 Normal;
+in vec3 FragPos;
+
+
 uniform int isFlashlightEnable;
 uniform int isDirLightEnable;
 uniform int isPointLightEnable;
@@ -65,7 +67,6 @@ vec3 calcPointLight(PointLight pontLight, vec3 normal, vec3 fragPos, vec3 viewDi
 
 void main()
 {    
-
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 
@@ -96,7 +97,7 @@ void main()
     
     
    
-    FragColor = result;
+        FragColor = result;
   //  FragColor = texture(material.texture_diffuse1, TexCoords).rgba;
 } 
 
