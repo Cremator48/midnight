@@ -136,17 +136,6 @@ int main()
    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // верхняя-левая              
 	};
 
-	// Указывание вершин пола
-	float floorVertices[] = {
-		// Координаты         // Нормали           // Текст. координаты	
-		-0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,	//0	
-		 0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2		// Верхний квадрат
-		 0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,	//1
-
-		-0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,	//3
-		 0.5f,  0.0f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,	//2
-		-0.5f,  0.0f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f	//0  
-	};
 
 	// Указывание вершин фрейм-прямоугольника
 	float frameVertices[] =
@@ -158,68 +147,6 @@ int main()
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		 1.0f, -1.0f,  1.0f, 0.0f,
 		 1.0f,  1.0f,  1.0f, 1.0f
-	};
-
-	// Вершины зеркального куба
-	float mirrorCubeVertices[] = {
-
-
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 2	// Дальняя грань (против часовой)
-	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 1
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 0
-
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 0
-	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 3
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,	// 2
-	 /*--------------------------------------------------------------------*/
-
-	 -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 4	// Ближняя грань (против часовой)
-	  0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 5
-	  0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 6
-
-	  0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 6
-	 -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 7
-	 -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,	// 4
-
-	 /*--------------------------------------------------------------------*/
-
-	 -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	// 7	// Левая грань (против часовой)
-	 -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	// 3
-	 -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	// 0
-
-	 -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,	// 0
-	 -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	// 4
-	 -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,	// 7
-
-	 /*--------------------------------------------------------------------*/
-
-	  0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	// 1	// Правая грань (против часовой)
-	  0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	// 2
-	  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	// 6	
-
-	  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	// 6
-	  0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,	// 5
-	  0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,	// 1
-
-	  /*--------------------------------------------------------------------*/
-
-	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	// 0	// Нижняя грань (против часовой)
-	  0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	// 1
-	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	// 5
-
-	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	// 5
-	 -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,	// 4
-	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,	// 0
-
-	 /*--------------------------------------------------------------------*/
-
-	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	// 6	// Верхняя грань (против часовой)
-	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	// 2
-	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	// 3	
-
-	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,	// 3
-	 -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,	// 7
-	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f	// 6
 	};
 
 
@@ -481,55 +408,75 @@ int main()
 	   /*--------------------------------------------------------------------*/
 	};
 
+	int sideOfCube = 10;
 
-	// НАстройка VAO и VBO для зеркального куба
-	unsigned int mirrorVAO, mirrorVBO;
+	std::vector<glm::vec3> translations;
+	translations.resize(sideOfCube* sideOfCube);
+	// Создание и заполнение массива позиция instance-кубов
 	{
-		glGenVertexArrays(1, &mirrorVAO);
-		glGenBuffers(1, &mirrorVBO);
+		unsigned int counter = 0;
+		for (unsigned int x = 0; x < sideOfCube; x++)
+		{
+			for (unsigned int z = 0; z < sideOfCube; z++)
+			{
+				translations[counter] = glm::vec3(-2.0f + ((float)x) * 3, 0.0f, -2.0f + ((float)z) * 3);
+				counter = counter + 1;
+			}
 
-		glBindVertexArray(mirrorVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, mirrorVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(mirrorCubeVertices), mirrorCubeVertices, GL_STATIC_DRAW);
-
-		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-
-		// Атрибуты нормалей
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		glBindVertexArray(0);
+		}
 	}
-
-
-
-	//Настройка атрибутов вершин для пола
-	unsigned int floorVAO;
-	unsigned int floorVBO; // НЕ УДАЛЯЙ VBO РАНЬШЕ ОКОНЧАНИЯ ПРОГРАММЫ. ИНАЧЕ ОН ОТОБРАЖАТЬ ОБЪЕКТ НЕ БУДЕТ
+	
+	// Создание instance-массива
+	unsigned int instanceVBO;
 	{
+		glGenBuffers(1, &instanceVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * (sideOfCube * sideOfCube), &translations[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	
 
-		glGenVertexArrays(1, &floorVAO);
-		glGenBuffers(1, &floorVBO);
+	// VAO и VBO для куба-объекта
+	unsigned int VAO, VBO;
+	{
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
 
-		glBindVertexArray(floorVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(floorVertices), floorVertices, GL_STATIC_DRAW);
+		glBindVertexArray(VAO);
 
-		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords), NULL, GL_STATIC_DRAW);
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), sizeof(cubeVerticesNormals), &cubeVerticesNormals);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals), sizeof(cubeVerticesTextureCoords), &cubeVerticesTextureCoords);
+
+		// Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
 
-		// Атрибуты нормалей
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		// Атрибут нормалей
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)));
 		glEnableVertexAttribArray(1);
 
-		// Атрибуты текстур
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		// Атрибут текстурных координат
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)+sizeof(cubeVerticesNormals)));
 		glEnableVertexAttribArray(2);
+
+		// Атрибут instance-массива
+		glEnableVertexAttribArray(3);
+		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glVertexAttribDivisor(3, 1);
+
 		glBindVertexArray(0);
+
 	}
+
+
+
 
 	// Настройка атрибутов вершин для лампочки
 	unsigned int lightVAO, lightVBO;
@@ -698,7 +645,6 @@ int main()
 	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
 	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs", NULL);
-	Shader mirrorShader("../midnight/mirrorShader.vs", "../midnight/mirrorShader.fs", NULL);
 
 	//	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	//	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -720,7 +666,6 @@ int main()
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -758,7 +703,7 @@ int main()
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//настройка основных матриц: вида и проекции
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 			glm::mat4 view = camera.GetViewMatrix();
 			glm::mat4 model;
 
@@ -822,47 +767,8 @@ int main()
 			}
 
 
-			//Передача основных матриц и позиции камеры шейдеру
-			{
-				ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
-				ourShader.setMat4("projection", projection);
-				ourShader.setMat4("view", view);
-				ourShader.setVec3("viewPos", camera.Position);
-			}
+			
 
-			//Отрисовка пола
-			{
-				//Трансляция модели вниз и увеличение
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(0.0f, -0.8f, 0.0f));
-				model = glm::scale(model, glm::vec3(13.0f, 13.0f, 13.0f));
-				ourShader.setMat4("model", model);
-
-				//Привязка diffuse текстуры
-				ourShader.setInt("material.texture_diffuse1", 0);
-				glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-				//Привязка specular текстуры
-				ourShader.setInt("material.texture_specular1", 1);
-				glBindTexture(GL_TEXTURE_2D, specularMap);
-
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, diffuseMap);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, specularMap);
-
-
-				//Отрисовка пола
-				ourShader.use();
-				glBindVertexArray(floorVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				// Считается хорошей практикой возвращать значения переменных к их первоначальным значениям
-				glBindVertexArray(0);
-				glActiveTexture(GL_TEXTURE0);
-
-			}
 
 			//Если PointLight включен - отрисовывай вращающийся куб-источник света
 			if (isPointLightEnable)
@@ -918,24 +824,31 @@ int main()
 			*/
 
 
-
-			// Отрисовка зеркального куба
+			//Передача основных матриц и позиции камеры шейдеру
 			{
-				mirrorShader.use();
-				mirrorShader.setMat4("view", view);
+				ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
+				ourShader.setMat4("projection", projection);
+				ourShader.setMat4("view", view);
+				ourShader.setVec3("viewPos", camera.Position);
+			}
 
+			// Рендеринг куба-объекта
+			{
 				model = glm::mat4(1.0f);
+				ourShader.setMat4("model", model);
+				
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, diffuseMap);
+				ourShader.setInt("material.texture_diffuse1", 0);
 
-				mirrorShader.setMat4("model", model);
-				mirrorShader.setMat4("projection", projection);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, specularMap);
+				ourShader.setInt("material.texture_specular1", 1);
 
-				mirrorShader.setVec3("cameraPos", camera.Position);
-
-				mirrorShader.setInt("skybox", 0);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-
-				glBindVertexArray(mirrorVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindVertexArray(VAO);
+				ourShader.use();
+				glDrawArraysInstanced(GL_TRIANGLES, 0, 36, (sideOfCube * sideOfCube));
+				
 			}
 
 			// Рендеринг скайбокса
@@ -951,6 +864,7 @@ int main()
 				glBindVertexArray(skyboxVAO);
 				skyBoxShader.setInt("skybox", 0);
 
+				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -972,6 +886,7 @@ int main()
 			screenShader.setMat4("projection", glm::mat4(1.0f));
 			screenShader.setMat4("view", glm::mat4(1.0f));
 			screenShader.setMat4("model", glm::mat4(1.0f));
+
 			screenShader.setInt("screenTexture", 0);
 			glBindVertexArray(frameVAO);
 
@@ -990,8 +905,7 @@ int main()
 	glDeleteVertexArrays(1, &lightVAO);
 	glDeleteBuffers(1, &lightVBO);
 	glDeleteFramebuffers(1, &fbo);
-	glDeleteVertexArrays(1, &floorVAO);
-	glDeleteBuffers(1, &floorVBO);
+	glDeleteFramebuffers(1, &instanceVBO);
 
 	// glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
 	glfwTerminate();
