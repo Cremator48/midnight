@@ -58,6 +58,10 @@ int main()
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	}
 
+	// Включаем мультисэмплинг
+	glfwWindowHint(GLFW_SAMPLES, 4);
+
+
 	// glfw: создание окна
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
 	if (window == NULL)
@@ -228,52 +232,52 @@ int main()
 			-0.5f, -0.5f, -0.5f,	// 0
 			-0.5f,  0.5f, -0.5f,	// 3
 			 0.5f,  0.5f, -0.5f,	// 2
-		/*--------------------------------------------------------------------*/
-			// Ближняя грань (против часовой)
-			-0.5f, -0.5f,  0.5f,	// 4
-			 0.5f, -0.5f,  0.5f,	// 5
-			 0.5f,  0.5f,  0.5f,	// 6
+			 /*--------------------------------------------------------------------*/
+				 // Ближняя грань (против часовой)
+				 -0.5f, -0.5f,  0.5f,	// 4
+				  0.5f, -0.5f,  0.5f,	// 5
+				  0.5f,  0.5f,  0.5f,	// 6
 
-			 0.5f,  0.5f,  0.5f,	// 6
-			-0.5f,  0.5f,  0.5f,	// 7
-			-0.5f, -0.5f,  0.5f,	// 4
-		/*--------------------------------------------------------------------*/
-			// Левая грань (против часовой)
-			-0.5f,  0.5f,  0.5f,	// 7
-			-0.5f,  0.5f, -0.5f,	// 3
-			-0.5f, -0.5f, -0.5f,	// 0
+				  0.5f,  0.5f,  0.5f,	// 6
+				 -0.5f,  0.5f,  0.5f,	// 7
+				 -0.5f, -0.5f,  0.5f,	// 4
+				 /*--------------------------------------------------------------------*/
+					 // Левая грань (против часовой)
+					 -0.5f,  0.5f,  0.5f,	// 7
+					 -0.5f,  0.5f, -0.5f,	// 3
+					 -0.5f, -0.5f, -0.5f,	// 0
 
-			-0.5f, -0.5f, -0.5f,	// 0
-			-0.5f, -0.5f,  0.5f,	// 4
-			-0.5f,  0.5f,  0.5f,	// 7 
-		/*--------------------------------------------------------------------*/
-			 // Правая грань (против часовой)
-			 0.5f, -0.5f, -0.5f,	// 1
-		     0.5f,  0.5f, -0.5f,	// 2
-			 0.5f,  0.5f,  0.5f,	// 6
-	 
-			 0.5f,  0.5f,  0.5f,	// 6
-			 0.5f, -0.5f,  0.5f,	// 5
-			 0.5f, -0.5f, -0.5f,	// 1
-		/*--------------------------------------------------------------------*/
-			// Нижняя грань (против часовой)
-			-0.5f, -0.5f, -0.5f,	// 0
-			 0.5f, -0.5f, -0.5f,	// 1
-			 0.5f, -0.5f,  0.5f,	// 5
-	 
-			 0.5f, -0.5f,  0.5f,  	// 5
-			-0.5f, -0.5f,  0.5f,  	// 4
-			-0.5f, -0.5f, -0.5f, 	// 0
-		/*--------------------------------------------------------------------*/
-			 // Верхняя грань (против часовой)
-			 0.5f,  0.5f,  0.5f,  	// 6
-			 0.5f,  0.5f, -0.5f,	// 2
-			-0.5f,  0.5f, -0.5f,	// 3	
+					 -0.5f, -0.5f, -0.5f,	// 0
+					 -0.5f, -0.5f,  0.5f,	// 4
+					 -0.5f,  0.5f,  0.5f,	// 7 
+					 /*--------------------------------------------------------------------*/
+						  // Правая грань (против часовой)
+						  0.5f, -0.5f, -0.5f,	// 1
+						  0.5f,  0.5f, -0.5f,	// 2
+						  0.5f,  0.5f,  0.5f,	// 6
 
-			-0.5f,  0.5f, -0.5f,	// 3
-			-0.5f,  0.5f,  0.5f,	// 7
-			 0.5f,  0.5f,  0.5f		// 6
-		/*--------------------------------------------------------------------*/
+						  0.5f,  0.5f,  0.5f,	// 6
+						  0.5f, -0.5f,  0.5f,	// 5
+						  0.5f, -0.5f, -0.5f,	// 1
+						  /*--------------------------------------------------------------------*/
+							  // Нижняя грань (против часовой)
+							  -0.5f, -0.5f, -0.5f,	// 0
+							   0.5f, -0.5f, -0.5f,	// 1
+							   0.5f, -0.5f,  0.5f,	// 5
+
+							   0.5f, -0.5f,  0.5f,  	// 5
+							  -0.5f, -0.5f,  0.5f,  	// 4
+							  -0.5f, -0.5f, -0.5f, 	// 0
+							  /*--------------------------------------------------------------------*/
+								   // Верхняя грань (против часовой)
+								   0.5f,  0.5f,  0.5f,  	// 6
+								   0.5f,  0.5f, -0.5f,	// 2
+								  -0.5f,  0.5f, -0.5f,	// 3	
+
+								  -0.5f,  0.5f, -0.5f,	// 3
+								  -0.5f,  0.5f,  0.5f,	// 7
+								   0.5f,  0.5f,  0.5f		// 6
+								   /*--------------------------------------------------------------------*/
 	};
 
 	// Нормали куба
@@ -284,62 +288,62 @@ int main()
 			 0.0f,  0.0f, -1.0f,	// 2	
 			 0.0f,  0.0f, -1.0f,	// 1
 			 0.0f,  0.0f, -1.0f,	// 0
-			 
+
 			 0.0f,  0.0f, -1.0f,	// 0
 			 0.0f,  0.0f, -1.0f,	// 3
 			 0.0f,  0.0f, -1.0f,	// 2
 
-		/*--------------------------------------------------------------------*/
-			// Ближняя грань (против часовой)
-			 0.0f,  0.0f, 1.0f,		// 4	
-			 0.0f,  0.0f, 1.0f,		// 5
-			 0.0f,  0.0f, 1.0f,		// 6
+			 /*--------------------------------------------------------------------*/
+				 // Ближняя грань (против часовой)
+				  0.0f,  0.0f, 1.0f,		// 4	
+				  0.0f,  0.0f, 1.0f,		// 5
+				  0.0f,  0.0f, 1.0f,		// 6
 
-			 0.0f,  0.0f, 1.0f,		// 6
-			 0.0f,  0.0f, 1.0f,		// 7
-			 0.0f,  0.0f, 1.0f,		// 4
+				  0.0f,  0.0f, 1.0f,		// 6
+				  0.0f,  0.0f, 1.0f,		// 7
+				  0.0f,  0.0f, 1.0f,		// 4
 
-		/*--------------------------------------------------------------------*/
-			// Левая грань (против часовой)
-			 -1.0f,  0.0f,  0.0f,	// 7	
-			 -1.0f,  0.0f,  0.0f,	// 3
-			 -1.0f,  0.0f,  0.0f,	// 0
+				  /*--------------------------------------------------------------------*/
+					  // Левая грань (против часовой)
+					   -1.0f,  0.0f,  0.0f,	// 7	
+					   -1.0f,  0.0f,  0.0f,	// 3
+					   -1.0f,  0.0f,  0.0f,	// 0
 
-			 -1.0f,  0.0f,  0.0f,	// 0
-			 -1.0f,  0.0f,  0.0f,	// 4
-			 -1.0f,  0.0f,  0.0f,	// 7
+					   -1.0f,  0.0f,  0.0f,	// 0
+					   -1.0f,  0.0f,  0.0f,	// 4
+					   -1.0f,  0.0f,  0.0f,	// 7
 
-		/*--------------------------------------------------------------------*/
-			// Правая грань (против часовой)
-			 1.0f,  0.0f,  0.0f,	// 1	
-			 1.0f,  0.0f,  0.0f,	// 2
-			 1.0f,  0.0f,  0.0f,	// 6	
-	
-			 1.0f,  0.0f,  0.0f,	// 6
-			 1.0f,  0.0f,  0.0f,	// 5
-			 1.0f,  0.0f,  0.0f,	// 1
+					   /*--------------------------------------------------------------------*/
+						   // Правая грань (против часовой)
+							1.0f,  0.0f,  0.0f,	// 1	
+							1.0f,  0.0f,  0.0f,	// 2
+							1.0f,  0.0f,  0.0f,	// 6	
 
-		/*--------------------------------------------------------------------*/
-			// Нижняя грань (против часовой)
-			 0.0f, -1.0f,  0.0f, 	// 0	
-			 0.0f, -1.0f,  0.0f,	// 1
-			 0.0f, -1.0f,  0.0f,	// 5
-	
-			 0.0f, -1.0f,  0.0f,	// 5
-			 0.0f, -1.0f,  0.0f,	// 4
-			 0.0f, -1.0f,  0.0f,	// 0
+							1.0f,  0.0f,  0.0f,	// 6
+							1.0f,  0.0f,  0.0f,	// 5
+							1.0f,  0.0f,  0.0f,	// 1
 
-		/*--------------------------------------------------------------------*/
-			// Верхняя грань (против часовой)
-			 0.0f,  1.0f,  0.0f,	// 6	
-			 0.0f,  1.0f,  0.0f,	// 2
-			 0.0f,  1.0f,  0.0f,	// 3	
-	
-			 0.0f,  1.0f,  0.0f,	// 3
-			 0.0f,  1.0f,  0.0f,	// 7
-			 0.0f,  1.0f,  0.0f	// 6
+							/*--------------------------------------------------------------------*/
+								// Нижняя грань (против часовой)
+								 0.0f, -1.0f,  0.0f, 	// 0	
+								 0.0f, -1.0f,  0.0f,	// 1
+								 0.0f, -1.0f,  0.0f,	// 5
 
-		/*--------------------------------------------------------------------*/
+								 0.0f, -1.0f,  0.0f,	// 5
+								 0.0f, -1.0f,  0.0f,	// 4
+								 0.0f, -1.0f,  0.0f,	// 0
+
+								 /*--------------------------------------------------------------------*/
+									 // Верхняя грань (против часовой)
+									  0.0f,  1.0f,  0.0f,	// 6	
+									  0.0f,  1.0f,  0.0f,	// 2
+									  0.0f,  1.0f,  0.0f,	// 3	
+
+									  0.0f,  1.0f,  0.0f,	// 3
+									  0.0f,  1.0f,  0.0f,	// 7
+									  0.0f,  1.0f,  0.0f	// 6
+
+									  /*--------------------------------------------------------------------*/
 	};
 
 	// Текстурные координаты куба
@@ -350,68 +354,68 @@ int main()
 		1.0f, 1.0f,	// 2	
 		1.0f, 0.0f,	// 1
 		0.0f, 0.0f,	// 0
-		
-	    0.0f, 0.0f,	// 0
-	    0.0f, 1.0f,   // 3
-	    1.0f, 1.0f,   // 2
 
-	   /*--------------------------------------------------------------------*/
-		// Ближняя грань (против часовой)
-	   0.0f, 0.0f,	// 4	
-	   1.0f, 0.0f,	// 5
-	   1.0f, 1.0f,	// 6
-	   
-	   1.0f, 1.0f,	// 6
-	   0.0f, 1.0f,	// 7
-	   0.0f, 0.0f,	// 4
+		0.0f, 0.0f,	// 0
+		0.0f, 1.0f,   // 3
+		1.0f, 1.0f,   // 2
 
-	   /*--------------------------------------------------------------------*/
-		// Левая грань (против часовой)
-	   1.0f, 0.0f,	// 7	
-	   1.0f, 1.0f,	// 3
-	   0.0f, 1.0f,	// 0
-	   
-	   0.0f, 1.0f,	// 0
-	   0.0f, 0.0f,	// 4
-	   1.0f, 0.0f,	// 7
+		/*--------------------------------------------------------------------*/
+		 // Ближняя грань (против часовой)
+		0.0f, 0.0f,	// 4	
+		1.0f, 0.0f,	// 5
+		1.0f, 1.0f,	// 6
 
-	   /*--------------------------------------------------------------------*/
-		// Правая грань (против часовой)
-	   0.0f, 1.0f,	// 1	
-	   1.0f, 1.0f,	// 2
-	   1.0f, 0.0f,	// 6	
-	   
-	   1.0f, 0.0f,	// 6
-	   0.0f, 0.0f,	// 5
-	   0.0f, 1.0f,	// 1
+		1.0f, 1.0f,	// 6
+		0.0f, 1.0f,	// 7
+		0.0f, 0.0f,	// 4
 
-	   /*--------------------------------------------------------------------*/
-		// Нижняя грань (против часовой)
-	   0.0f, 1.0f, 	// 0	
-	   1.0f, 1.0f,	// 1
-	   1.0f, 0.0f,	// 5
-	   
-	   1.0f, 0.0f,	// 5
-	   0.0f, 0.0f,	// 4
-	   0.0f, 1.0f,	// 0
+		/*--------------------------------------------------------------------*/
+		 // Левая грань (против часовой)
+		1.0f, 0.0f,	// 7	
+		1.0f, 1.0f,	// 3
+		0.0f, 1.0f,	// 0
 
-	   /*--------------------------------------------------------------------*/
-		// Верхняя грань (против часовой)
-	   1.0f, 0.0f,	// 6	
-	   1.0f, 1.0f,	// 2
-	   0.0f, 1.0f,	// 3	
-	   
-	   0.0f, 1.0f,	// 3
-	   0.0f, 0.0f,	// 7
-	   1.0f, 0.0f	// 6
+		0.0f, 1.0f,	// 0
+		0.0f, 0.0f,	// 4
+		1.0f, 0.0f,	// 7
 
-	   /*--------------------------------------------------------------------*/
+		/*--------------------------------------------------------------------*/
+		 // Правая грань (против часовой)
+		0.0f, 1.0f,	// 1	
+		1.0f, 1.0f,	// 2
+		1.0f, 0.0f,	// 6	
+
+		1.0f, 0.0f,	// 6
+		0.0f, 0.0f,	// 5
+		0.0f, 1.0f,	// 1
+
+		/*--------------------------------------------------------------------*/
+		 // Нижняя грань (против часовой)
+		0.0f, 1.0f, 	// 0	
+		1.0f, 1.0f,	// 1
+		1.0f, 0.0f,	// 5
+
+		1.0f, 0.0f,	// 5
+		0.0f, 0.0f,	// 4
+		0.0f, 1.0f,	// 0
+
+		/*--------------------------------------------------------------------*/
+		 // Верхняя грань (против часовой)
+		1.0f, 0.0f,	// 6	
+		1.0f, 1.0f,	// 2
+		0.0f, 1.0f,	// 3	
+
+		0.0f, 1.0f,	// 3
+		0.0f, 0.0f,	// 7
+		1.0f, 0.0f	// 6
+
+		/*--------------------------------------------------------------------*/
 	};
 
 	int sideOfCube = 10;
 
 	std::vector<glm::vec3> translations;
-	translations.resize(sideOfCube* sideOfCube);
+	translations.resize(sideOfCube * sideOfCube);
 	// Создание и заполнение массива позиция instance-кубов
 	{
 		unsigned int counter = 0;
@@ -425,7 +429,7 @@ int main()
 
 		}
 	}
-	
+
 	// Создание instance-массива
 	unsigned int instanceVBO;
 	{
@@ -434,7 +438,7 @@ int main()
 		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * (sideOfCube * sideOfCube), &translations[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
-	
+
 
 	// VAO и VBO для куба-объекта
 	unsigned int VAO, VBO;
@@ -445,7 +449,7 @@ int main()
 		glBindVertexArray(VAO);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		
+
 		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords), NULL, GL_STATIC_DRAW);
 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
@@ -461,7 +465,7 @@ int main()
 		glEnableVertexAttribArray(1);
 
 		// Атрибут текстурных координат
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)+sizeof(cubeVerticesNormals)));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals)));
 		glEnableVertexAttribArray(2);
 
 		// Атрибут instance-массива
@@ -498,41 +502,65 @@ int main()
 	}
 
 
-	// Настройка Фрейм-буффера
+	// Конфигурируем MSAA фреймбуфер
 	unsigned int fbo;
-	unsigned int frameBuferTexture;
+	unsigned int textureColorBufferMultiSampled;
 	{
 		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 
-		//Создание текстуры для фрейм-буфера
+		// Создаем мультисэмплированную цветовую прикрепляемую текстуру
 		{
-			glGenTextures(1, &frameBuferTexture);
-			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
+			glGenTextures(1, &textureColorBufferMultiSampled);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
 
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		}
-
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameBuferTexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
 
 	}
 
-	// Настройка рендр-буфера
+	// Создаем (также мультисэмплированный) рендербуфер для прикрепляемых объектов глубины трафарета
 	unsigned int rbo;
 	{
 		glGenRenderbuffers(1, &rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+
+		//  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
+
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
+
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	// Конфигурируем второй постпроцессинг фреймбуфер
+	unsigned int intermediateFBO;
+	{
+		glGenFramebuffers(1, &intermediateFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, intermediateFBO);
+	}
+	
+	// Создаем цветовую прикрепляемую текстуру
+	unsigned int screenTexture;
+	{
+		glGenTextures(1, &screenTexture);
+		glBindTexture(GL_TEXTURE_2D, screenTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);	// нам нужен только цветовой буфер
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << endl;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -688,19 +716,25 @@ int main()
 		// Обработка ввода
 		processInput(window);
 
+		glEnable(GL_MULTISAMPLE);
+
 		glEnable(GL_CULL_FACE); //Включить режим отсечения граней
 		glCullFace(GL_BACK);	// отсечение задних граней
 		glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 
-		// Рендеринг в кастомный-фреймбуфер
+		// Рендер
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		// 1. Отрисовываем обычную сцену в мультисэмплированные буферы
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		{
 			//Вкючить буфер глубины
-			glEnable(GL_DEPTH_TEST);
-
-			// Рендеринг фона
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glEnable(GL_DEPTH_TEST);
+		
+			
 
 			//настройка основных матриц: вида и проекции
 			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
@@ -873,14 +907,20 @@ int main()
 
 
 		}
+		// 2. Теперь блитируем мультисэмплированный буфер(ы) в нормальный цветовой буфер промежуточного FBO. Изображение сохранено в screenTexture
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
+		glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		// Рендеринг на экран
+		// 3. Теперь рендерим прямоугольник с визуальными эффектами сцены, представленными текстурным изображением
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glDisable(GL_DEPTH_TEST);
-
 			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
+			glDisable(GL_DEPTH_TEST);
+
+
+
 
 			screenShader.use();
 			screenShader.setMat4("projection", glm::mat4(1.0f));
@@ -891,7 +931,7 @@ int main()
 			glBindVertexArray(frameVAO);
 
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, frameBuferTexture);
+			glBindTexture(GL_TEXTURE_2D, screenTexture);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
