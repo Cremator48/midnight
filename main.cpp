@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include <vector>
 #include "Shader_class.h"
 #include "stb_image.h"
 
@@ -12,24 +11,17 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "camera.h"
-#include "Mesh.h"
-#include "model.h"
-
-
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(char const* path);
-void key_callback(GLFWwindow* window, int key, int action, int scancode, int mods);
-unsigned int loadCubemap(vector<std::string> faces);
+
 
 // Константы
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
-float sizeOfBox = 50.0f;
 
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
@@ -40,15 +32,12 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
-bool isFlashlightEnable = true;
-bool isDirLightEnable = true;
-bool isPointLightEnable = true;
+glm::vec3 positionOfBox(0.0f, 0.0f, 0.0f);
+
 
 int main()
 {
-
-
-	std::cout << "git on windows!\n";
+	std::cout << "Naked program!\n";
 
 	// glfw: инициализация и конфигурирование
 	{
@@ -77,7 +66,6 @@ int main()
 		glfwSetCursorPosCallback(window, mouse_callback);
 		glfwSetScrollCallback(window, scroll_callback);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-		glfwSetKeyCallback(window, key_callback);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
@@ -88,137 +76,6 @@ int main()
 		return -1;
 	}
 
-	// Указывание вершин лампочки
-	float vertices[] =
-	{
-		// Задняя грань
-	   -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // нижняя-левая
-		0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // нижняя-правая    
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая              
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая
-	   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // верхняя-левая
-	   -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // нижняя-левая   
-
-	   // Передняя грань
-	  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая
-	   0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // верхняя-правая
-	   0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // нижняя-правая        
-	   0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // верхняя-правая
-	  -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая
-	  -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // верхняя-левая  
-
-	  // Грань слева
-	 -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-правая
-	 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-левая
-	 -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-левая       
-	 -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-левая
-	 -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-правая
-	 -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-правая
-
-	 // Грань справа
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-левая
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая      
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-правая          
-	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // нижняя-правая
-	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая
-	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // верхняя-левая
-
-	 // Нижняя грань          
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // верхняя-правая
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // нижняя-левая
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // верхняя-левая        
-	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // нижняя-левая
-	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // верхняя-правая
-	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // нижняя-правая
-
-	// Верхняя грань
-   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // верхняя-левая
-	0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // верхняя-правая
-	0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // нижняя-правая                 
-	0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // нижняя-правая
-   -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, // нижняя-левая  
-   -0.5f,  0.5f, -0.5f,  0.0f, 1.0f  // верхняя-левая              
-	};
-
-
-	// Указывание вершин фрейм-прямоугольника
-	float frameVertices[] =
-	{
-	   -1.0f,  1.0f,  0.0f, 1.0f,
-		-1.0f, -1.0f,  0.0f, 0.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-
-		-1.0f,  1.0f,  0.0f, 1.0f,
-		 1.0f, -1.0f,  1.0f, 0.0f,
-		 1.0f,  1.0f,  1.0f, 1.0f
-	};
-
-
-	// Вершины куба комплексные (координаты + нормали + текстурные координаты)
-	/*
-
-	float cubePositions[] =
-	{
-	// Координаты         // Нормали		  // Текстурные координаты
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,	// 2	// Дальняя грань (против часовой)
-	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f,	// 1
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,	// 0
-
-	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,	// 0
-	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f,   // 3
-	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,   // 2
-
-
-	 -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.0f, 0.0f,	// 4	// Ближняя грань (против часовой)
-	  0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 1.0f, 0.0f,	// 5
-	  0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 1.0f, 1.0f,	// 6
-
-	  0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 1.0f, 1.0f,	// 6
-	 -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.0f, 1.0f,	// 7
-	 -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f, 0.0f, 0.0f,	// 4
-
-
-
-	 -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,	// 7	// Левая грань (против часовой)
-	 -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f,	// 3
-	 -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,	// 0
-
-	 -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f,	// 0
-	 -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f,	// 4
-	 -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f,	// 7
-
-
-
-	  0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f,	// 1	// Правая грань (против часовой)
-	  0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f,	// 2
-	  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f,	// 6
-
-	  0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f,	// 6
-	  0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f,	// 5
-	  0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f,	// 1
-
-
-
-	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, 	// 0	// Нижняя грань (против часовой)
-	  0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f,	// 1
-	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,	// 5
-
-	  0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f,	// 5
-	 -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f,	// 4
-	 -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f,	// 0
-
-
-
-	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f,	// 6	// Верхняя грань (против часовой)
-	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f,	// 2
-	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f, 0.0f, 0.0f, 1.0f,	// 3
-
-	 -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f,	// 3
-	 -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f,	// 7
-	  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f	// 6
-	};
-
-	*/
 
 	// Координаты вершин куба
 	float cubeVerticesPositions[] =
@@ -412,33 +269,93 @@ int main()
 		/*--------------------------------------------------------------------*/
 	};
 
-	int sideOfCube = 10;
-
-	std::vector<glm::vec3> translations;
-	translations.resize(sideOfCube * sideOfCube);
-	// Создание и заполнение массива позиция instance-кубов
+	// Координаты вершин пола
+	float floorVerticesPositions[] =
 	{
-		unsigned int counter = 0;
-		for (unsigned int x = 0; x < sideOfCube; x++)
-		{
-			for (unsigned int z = 0; z < sideOfCube; z++)
-			{
-				translations[counter] = glm::vec3(-2.0f + ((float)x) * 3, 0.0f, -2.0f + ((float)z) * 3);
-				counter = counter + 1;
-			}
+		// Верхняя грань (против часовой)
+		 0.5f,  0.5f,  0.5f,	// 6
+		 0.5f,  0.5f, -0.5f,	// 2
+		-0.5f,  0.5f, -0.5f,	// 3	
 
-		}
-	}
+		-0.5f,  0.5f, -0.5f,	// 3
+		-0.5f,  0.5f,  0.5f,	// 7
+		 0.5f,  0.5f,  0.5f		// 6
+	};
 
-	// Создание instance-массива
-	unsigned int instanceVBO;
+	// Текстурные координаты пола
+	float floorTextureCoords[] =
 	{
-		glGenBuffers(1, &instanceVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * (sideOfCube * sideOfCube), &translations[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
+		10.0f, 0.0f,	// 6	
+		10.0f, 10.0f,	// 2
+		0.0f,  10.0f,	// 3	
 
+		0.0f,  10.0f,	// 3
+		0.0f,  0.0f,	// 7
+		10.0f, 0.0f		// 6
+	};
+
+
+	float floorNormals[] =
+	{
+		// Верхняя грань (против часовой)
+									  0.0f,  1.0f,  0.0f,	// 6	
+									  0.0f,  1.0f,  0.0f,	// 2
+									  0.0f,  1.0f,  0.0f,	// 3	
+
+									  0.0f,  1.0f,  0.0f,	// 3
+									  0.0f,  1.0f,  0.0f,	// 7
+									  0.0f,  1.0f,  0.0f	// 6
+	};
+
+	// Координаты вершин экранного прямоугольника
+	float screenPlaneVertices[] =
+	{
+			-0.5f, -0.5f, 0.5f,	// 4
+			 0.5f, -0.5f, 0.5f,	// 5
+			 0.5f, 0.5f, 0.5f,	// 6
+
+			 0.5f, 0.5f, 0.5f,	// 6
+			-0.5f, 0.5f, 0.5f,	// 7
+			-0.5f, -0.5f, 0.5f,	// 4
+	};
+
+	// Координаты текстур экранного прямоугольника
+	float screenTextureCoords[] =
+	{
+		0.0f, 0.0f,	// 4	
+		1.0f, 0.0f,	// 5
+		1.0f, 1.0f,	// 6
+
+		1.0f, 1.0f,	// 6
+		0.0f, 1.0f,	// 7
+		0.0f, 0.0f,	// 4
+	};
+
+	unsigned int screenVAO, screenVBO;
+	{
+		glGenVertexArrays(1, &screenVAO);
+		glGenBuffers(1, &screenVBO);
+
+		glBindVertexArray(screenVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, screenVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(screenPlaneVertices) + sizeof(screenTextureCoords), NULL, GL_STATIC_DRAW);
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(screenPlaneVertices), &screenPlaneVertices);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(screenPlaneVertices), sizeof(screenTextureCoords), &screenTextureCoords);
+
+
+		// Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(0);
+
+		// Атрибут текстурных координат
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(screenPlaneVertices)));
+		glEnableVertexAttribArray(1);
+
+		glBindVertexArray(0);
+	}
 
 	// VAO и VBO для куба-объекта
 	unsigned int VAO, VBO;
@@ -455,6 +372,7 @@ int main()
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), sizeof(cubeVerticesNormals), &cubeVerticesNormals);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals), sizeof(cubeVerticesTextureCoords), &cubeVerticesTextureCoords);
+		
 
 		// Координатный атрибут
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
@@ -465,223 +383,75 @@ int main()
 		glEnableVertexAttribArray(1);
 
 		// Атрибут текстурных координат
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals)));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)+sizeof(cubeVerticesNormals)));
 		glEnableVertexAttribArray(2);
 
-		// Атрибут instance-массива
-		glEnableVertexAttribArray(3);
-		glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glVertexAttribDivisor(3, 1);
-
 		glBindVertexArray(0);
 
 	}
 
 
-
-
-	// Настройка атрибутов вершин для лампочки
-	unsigned int lightVAO, lightVBO;
+	// VAO и VBO для куба-источника света
+	unsigned int lightCubeVAO, lightCubeVBO;
 	{
-		//Настройка куба освещения
-		glGenVertexArrays(1, &lightVAO);
-		glGenBuffers(1, &lightVBO);
+		glGenVertexArrays(1, &lightCubeVAO);
+		glGenBuffers(1, &lightCubeVBO);
 
-		glBindVertexArray(lightVAO);
+		glBindVertexArray(lightCubeVAO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, lightCubeVBO);
 
-		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), NULL, GL_STATIC_DRAW);
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
+
+		// Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
 
 		glBindVertexArray(0);
 	}
 
-
-	// Конфигурируем MSAA фреймбуфер
-	unsigned int fbo;
-	unsigned int textureColorBufferMultiSampled;
+	unsigned int floorVAO, floorVBO;
 	{
-		glGenFramebuffers(1, &fbo);
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glGenVertexArrays(1, &floorVAO);
+		glGenBuffers(1, &floorVBO);
 
+		glBindVertexArray(floorVAO);
 
-		// Создаем мультисэмплированную цветовую прикрепляемую текстуру
-		{
-			glGenTextures(1, &textureColorBufferMultiSampled);
-			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled);
+		glBindBuffer(GL_ARRAY_BUFFER, floorVBO);
 
-			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGB, SCR_WIDTH, SCR_HEIGHT, GL_TRUE);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(floorVerticesPositions) + sizeof(floorNormals) + sizeof(floorTextureCoords), NULL, GL_STATIC_DRAW);
 
-			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-		}
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, textureColorBufferMultiSampled, 0);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(floorVerticesPositions), &floorVerticesPositions);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(floorVerticesPositions), sizeof(floorNormals), &floorNormals);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(floorVerticesPositions) + sizeof(floorNormals), sizeof(floorTextureCoords), &floorTextureCoords);
 
-	}
-
-	// Создаем (также мультисэмплированный) рендербуфер для прикрепляемых объектов глубины трафарета
-	unsigned int rbo;
-	{
-		glGenRenderbuffers(1, &rbo);
-		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-
-		//  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT);
-
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-	// Конфигурируем второй постпроцессинг фреймбуфер
-	unsigned int intermediateFBO;
-	{
-		glGenFramebuffers(1, &intermediateFBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, intermediateFBO);
-	}
-	
-	// Создаем цветовую прикрепляемую текстуру
-	unsigned int screenTexture;
-	{
-		glGenTextures(1, &screenTexture);
-		glBindTexture(GL_TEXTURE_2D, screenTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTexture, 0);	// нам нужен только цветовой буфер
-
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << endl;
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-	// Настройка VAO и VBO для фреймбуфера
-	unsigned int frameVAO, frameVBO;
-	{
-		glGenVertexArrays(1, &frameVAO);
-		glGenBuffers(1, &frameVBO);
-
-		glBindVertexArray(frameVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, frameVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(frameVertices), frameVertices, GL_STATIC_DRAW);
-
-		//Координатный атрибут
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		// Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 		glEnableVertexAttribArray(0);
 
-		// Атрибуты текстур
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+		// Атрибут нормалей
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(floorVerticesPositions)));
 		glEnableVertexAttribArray(1);
 
-		glBindVertexArray(0);
-	}
-
-
-	// Вершины для скайбокса
-	float skyboxVertices[] = {
-	-1.0f,  1.0f, -1.0f,  //0
-	-1.0f, -1.0f, -1.0f,  //1
-	 1.0f, -1.0f, -1.0f,  //2
-
-	 1.0f, -1.0f, -1.0f,  //2
-	 1.0f,  1.0f, -1.0f,  //3
-	-1.0f,  1.0f, -1.0f,  //0
-
-	-1.0f, -1.0f,  1.0f,
-	-1.0f, -1.0f, -1.0f,
-	-1.0f,  1.0f, -1.0f,
-	-1.0f,  1.0f, -1.0f,
-	-1.0f,  1.0f,  1.0f,
-	-1.0f, -1.0f,  1.0f,
-
-	 1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-
-	-1.0f, -1.0f,  1.0f,
-	-1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f, -1.0f,  1.0f,
-	-1.0f, -1.0f,  1.0f,
-
-	-1.0f,  1.0f, -1.0f,
-	 1.0f,  1.0f, -1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	-1.0f,  1.0f,  1.0f,
-	-1.0f,  1.0f, -1.0f,
-
-	-1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f,  1.0f,
-	 1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f,  1.0f,
-	 1.0f, -1.0f,  1.0f
-	};
-
-	// Настройка VAO и VBO для скайбокса
-	unsigned int skyboxVAO, skyboxVBO;
-	{
-		glGenVertexArrays(1, &skyboxVAO);
-		glGenBuffers(1, &skyboxVBO);
-
-		glBindVertexArray(skyboxVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-
-		//Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
+		// Атрибут текстурных координат
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(floorVerticesPositions) + sizeof(floorNormals)));
+		glEnableVertexAttribArray(2);
 
 		glBindVertexArray(0);
 	}
 
-	// Создание CubeMap-текстуры
-	vector<std::string> faces
-	{
-			"right.jpg",
-			"left.jpg",
-			"top.jpg",
-			"bottom.jpg",
-			"front.jpg",
-			"back.jpg"
-	};
-
-	for (int i = 0; i < faces.size(); i++)
-	{
-		faces[i].insert(0, "../res/skybox/");
-	}
-
-	unsigned int cubemapTexture = loadCubemap(faces);
-
-	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", "../midnight/shader.gs");
-	Shader screenShader("../midnight/frameBuffShader.vs", "../midnight/frameBuffShader.fs", NULL);
+	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
-	Shader skyBoxShader("../midnight/skyBoxShader.vs", "../midnight/skyBoxShader.fs", NULL);
-
-	//	Model bankaModel("../res/models/banka/model.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	//	Model skullModel("../res/models/Skull/12140_Skull_v3_L2.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	//	Model backpackModel("../res/models/backpack/backpack.obj", aiProcess_Triangulate | /*aiProcess_FlipUVs | */  aiProcess_CalcTangentSpace);
+	Shader shadowShader("../midnight/shadow.vs", "../midnight/shadow.fs", NULL);
+	Shader testShader("../midnight/test.vs", "../midnight/test.fs", NULL);
 
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
+	unsigned int floorTexture = loadTexture("../res/floor.png");
 
-	glm::vec3 pointLightPosition;
+	glm::vec3 pointLightPosition = glm::vec3(-2.0f, 2.0f, -1.0f);
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
@@ -689,8 +459,33 @@ int main()
 	float lastTime = glfwGetTime(); // Переменная хранящая время начала работы программы
 	int nbFrames = 0;
 
-	screenShader.use();
-	screenShader.setInt("screenTexture", 0);
+	// Буффер для карты теней
+	unsigned int depthMapFBO;
+	unsigned int depthMap;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	{
+		glGenFramebuffers(1, &depthMapFBO);
+
+		glGenTextures(1, &depthMap);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	
+	glm::vec3 scaleOfFloor(13.0f, 1.0f, 13.0f);
+	
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -708,33 +503,84 @@ int main()
 		}
 
 		//отсчёт времени для нормализации скорости движения
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
+		{
+			float currentFrame = glfwGetTime();
+			deltaTime = currentFrame - lastFrame;
+			lastFrame = currentFrame;
+		}
 
 		// Обработка ввода
 		processInput(window);
 
+
 		glEnable(GL_MULTISAMPLE);
 
+		glEnable(GL_DEPTH_TEST);
+
+		
 		glEnable(GL_CULL_FACE); //Включить режим отсечения граней
 		glCullFace(GL_BACK);	// отсечение задних граней
 		glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
-
-		// Рендер
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		// 1. Отрисовываем обычную сцену в мультисэмплированные буферы
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+		glm::mat4 lightSpaceMatrix;
+
+		// Проход для расчёта теней
 		{
-			//Вкючить буфер глубины
+			// Настройка матриц для теневой карты
+			
+			{
+				float near_plane = 1.0f, far_plane = 7.5f;
+
+				glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+
+				glm::mat4 lightView = glm::lookAt(pointLightPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+				lightSpaceMatrix = lightProjection * lightView;
+			}
+
+
+			shadowShader.use();
+			shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+			glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glm::mat4 model;
+
+
+			// Рендеринг куба-объекта
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, positionOfBox);
+				shadowShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг пола
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(0.0f, -1.3f, 0.0f));
+				model = glm::scale(model, scaleOfFloor);
+				shadowShader.setMat4("model", model);
+
+				glBindVertexArray(floorVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+
+			
+
+		}
+		
+
+		// Проход основной
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glEnable(GL_DEPTH_TEST);
-		
-			
+			glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
 			//настройка основных матриц: вида и проекции
 			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
@@ -742,210 +588,64 @@ int main()
 			glm::mat4 model;
 
 
-
-
-			//Настройки освещения
-			{
-
-				// Куб-не источник
-				ourShader.use();
-				ourShader.setFloat("material.shininess", 32.0f);
-
-				//[1] SpotLight
-				//Настройки цвета самого света
-				ourShader.setVec3("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-				ourShader.setVec3("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-				ourShader.setVec3("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-				ourShader.setInt("isFlashlightEnable", isFlashlightEnable);
-
-
-				//настройка затухания света
-				ourShader.setFloat("spotLight.constant", 1.0f);
-				ourShader.setFloat("spotLight.linear", 0.09f);
-				ourShader.setFloat("spotLight.quadratic", 0.032f);
-
-				//Настройка направления освещения + конуса прожектора
-				ourShader.setVec3("spotLight.position", camera.Position);
-				ourShader.setVec3("spotLight.direction", camera.Front);
-				ourShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-				ourShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-
-
-				//[2] PointLight
-				ourShader.setInt("isPointLightEnable", isPointLightEnable);
-				ourShader.setVec3("pointLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-				ourShader.setVec3("pointLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-				ourShader.setVec3("pointLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-				//настройка затухания света
-				ourShader.setFloat("pointLight.constant", 1.0f);
-				ourShader.setFloat("pointLight.linear", 0.09f);
-				ourShader.setFloat("pointLight.quadratic", 0.032f);
-
-				//Настройка расположения источника света
-				float x = sin(glfwGetTime()) * 5.0f;
-				float y = 0.0f;
-				float z = cos(glfwGetTime()) * 5.0f;
-				pointLightPosition = glm::vec3(x, y, z);
-				ourShader.setVec3("pointLight.position", pointLightPosition);
-
-
-				//[3] DirLight
-
-				ourShader.setInt("isDirLightEnable", isDirLightEnable);
-				ourShader.setVec3("dirLight.direction", glm::vec3(3.0f, 3.0f, 3.0f));
-				ourShader.setVec3("dirLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-				ourShader.setVec3("dirLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-				ourShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-			}
-
-
-			
-
-
-			//Если PointLight включен - отрисовывай вращающийся куб-источник света
-			if (isPointLightEnable)
-			{
-				glBindVertexArray(lightVAO);
-				//Отрисовка куба-источника света
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, pointLightPosition);
-				model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-				lightCubeShader.use();
-				lightCubeShader.setMat4("model", model);
-				lightCubeShader.setMat4("projection", projection);
-				lightCubeShader.setMat4("view", view);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-			//Отрисовка моделей
-			/*
-			{
-				//Отрисовка модели рюкзака
-				{
-
-					ourShader.use();
-					model = glm::mat4(1.0f);
-					model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
-					ourShader.setMat4("model", model);
-					backpackModel.Draw(ourShader);
-
-				}
-
-				//Отрисовка банки
-				{
-					model = glm::mat4(1.0f);
-					model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 0.0f));
-					model = glm::scale(model, glm::vec3(3.0f, 3.0f, 3.0f));
-					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					ourShader.setMat4("model", model);
-					bankaModel.Draw(ourShader);
-				}
-
-				//Отрисовка черепа
-				{
-
-					model = glm::mat4(1.0f);
-					model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-					model = glm::scale(model, glm::vec3(0.03f, 0.03f, 0.03f));
-					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					ourShader.setMat4("model", model);
-					skullModel.Draw(ourShader);
-
-				}
-			}
-			*/
-
-
 			//Передача основных матриц и позиции камеры шейдеру
 			{
-				ourShader.use(); //Шейдерная программа уже запущенна в блоке кода "Настройки освещения"
+				ourShader.use();
 				ourShader.setMat4("projection", projection);
 				ourShader.setMat4("view", view);
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, diffuseMap);
+				ourShader.setInt("texture_diffuse1", 0);
+
+				glActiveTexture(GL_TEXTURE1);
+				ourShader.setInt("shadowMap", 1);
+				glBindTexture(GL_TEXTURE_2D, depthMap);
+
+
+				ourShader.setVec3("lightPos", pointLightPosition);
 				ourShader.setVec3("viewPos", camera.Position);
+				ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 			}
+
 
 			// Рендеринг куба-объекта
 			{
 				model = glm::mat4(1.0f);
+				model = glm::translate(model, positionOfBox);
 				ourShader.setMat4("model", model);
-				
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, diffuseMap);
-				ourShader.setInt("material.texture_diffuse1", 0);
 
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, specularMap);
-				ourShader.setInt("material.texture_specular1", 1);
+
 
 				glBindVertexArray(VAO);
-				ourShader.use();
-				glDrawArraysInstanced(GL_TRIANGLES, 0, 36, (sideOfCube * sideOfCube));
-				
+				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			// Рендеринг скайбокса
+			// Рендеринг пола
 			{
-				glDepthFunc(GL_LEQUAL);
-
-				skyBoxShader.use();
-				skyBoxShader.setMat4("projection", projection);
-
-				view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // убираем из матрицы вида секцию, отвечающую за операцию трансляции
-				skyBoxShader.setMat4("view", view);
-
-				glBindVertexArray(skyboxVAO);
-				skyBoxShader.setInt("skybox", 0);
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(0.0f, -1.3f, 0.0f));
+				model = glm::scale(model, scaleOfFloor);
+				ourShader.setMat4("model", model);
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
+				glBindTexture(GL_TEXTURE_2D, floorTexture);
+				ourShader.setInt("texture_diffuse1", 0);
 
-				glDepthFunc(GL_LESS);
+				glBindVertexArray(floorVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
-
-
+			
 		}
-		// 2. Теперь блитируем мультисэмплированный буфер(ы) в нормальный цветовой буфер промежуточного FBO. Изображение сохранено в screenTexture
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediateFBO);
-		glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		
 
-		// 3. Теперь рендерим прямоугольник с визуальными эффектами сцены, представленными текстурным изображением
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT);
-			glDisable(GL_DEPTH_TEST);
-
-
-
-
-			screenShader.use();
-			screenShader.setMat4("projection", glm::mat4(1.0f));
-			screenShader.setMat4("view", glm::mat4(1.0f));
-			screenShader.setMat4("model", glm::mat4(1.0f));
-
-			screenShader.setInt("screenTexture", 0);
-			glBindVertexArray(frameVAO);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, screenTexture);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
+		
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
 	}
-
-	// Опционально: освобождаем все ресурсы, как только они выполнили свое предназначение
-	glDeleteVertexArrays(1, &lightVAO);
-	glDeleteBuffers(1, &lightVBO);
-	glDeleteFramebuffers(1, &fbo);
-	glDeleteFramebuffers(1, &instanceVBO);
 
 	// glfw: завершение, освобождение всех ранее задействованных GLFW-ресурсов
 	glfwTerminate();
@@ -966,6 +666,16 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		positionOfBox.x = positionOfBox.x - 0.01f;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		positionOfBox.x = positionOfBox.x + 0.01f;
+
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		positionOfBox.y = positionOfBox.y - 0.01f;
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		positionOfBox.y = positionOfBox.y + 0.01f;
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция
@@ -1020,10 +730,15 @@ unsigned int loadTexture(char const* path)
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		// Установка параметров фильтрации текстуры
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
+
+
 
 		stbi_image_free(data);
 	}
@@ -1032,55 +747,6 @@ unsigned int loadTexture(char const* path)
 		std::cout << "Texture failed to load at path: " << path << std::endl;
 		stbi_image_free(data);
 	}
-
-	return textureID;
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (key == GLFW_KEY_F && action == GLFW_PRESS)
-	{
-		isFlashlightEnable = !isFlashlightEnable;
-	}
-	if (key == GLFW_KEY_G && action == GLFW_PRESS)
-	{
-		isDirLightEnable = !isDirLightEnable;
-	}
-	if (key == GLFW_KEY_H && action == GLFW_PRESS)
-	{
-		isPointLightEnable = !isPointLightEnable;
-	}
-
-}
-
-unsigned int loadCubemap(vector<std::string> faces)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < faces.size(); i++)
-	{
-		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-			);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap tex failed to load at path: " << faces[i] << std::endl;
-			stbi_image_free(data);
-		}
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
 }
