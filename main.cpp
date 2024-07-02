@@ -444,7 +444,7 @@ int main()
 
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
-	Shader shadowShader("../midnight/shadow.vs", "../midnight/shadow.fs", NULL);
+	Shader shadowShader("../midnight/shadow.vs", "../midnight/shadow.fs", "../midnight/shadow.gs");
 
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
@@ -460,30 +460,38 @@ int main()
 
 
 
-	// Буффер для карты теней
+	// Генерация кубической карты теней
 	unsigned int depthMapFBO;
-	unsigned int depthMap;
+	unsigned int depthCubemap;
 	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 	{
 		glGenFramebuffers(1, &depthMapFBO);
 
-		glGenTextures(1, &depthMap);
-		glBindTexture(GL_TEXTURE_2D, depthMap);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glGenTextures(1, &depthCubemap);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+		for (unsigned int i = 0; i < 6; ++i)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+
+	float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
+	
+
+
+
 	
 	glm::vec3 scaleOfFloor(13.0f, 1.0f, 13.0f);
 	
@@ -522,34 +530,51 @@ int main()
 		pointLightPosition.x = sin(time) * 2;
 		pointLightPosition.z = cos(time) * 2;
 		
+		// Расчёт матриц трансформации кубической карты глубины
+		float near_plane = 1.0f, far_plane = 25.0f;
+		float near = 1.0f;
+		float far = 25.0f;
+		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
+
+		std::vector<glm::mat4> shadowTransforms;
+		shadowTransforms.push_back(shadowProj* glm::lookAt(pointLightPosition, pointLightPosition + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(pointLightPosition, pointLightPosition + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(pointLightPosition, pointLightPosition + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(pointLightPosition, pointLightPosition + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(pointLightPosition, pointLightPosition + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+		shadowTransforms.push_back(shadowProj* glm::lookAt(pointLightPosition, pointLightPosition + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 		
 
-		glm::mat4 lightSpaceMatrix;
-
+		
 		// Проход для расчёта теней
 		{
 			// Настройка матриц для теневой карты
-			
-			{
-				float near_plane = 1.0f, far_plane = 7.5f;
-
-				glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-
-				glm::mat4 lightView = glm::lookAt(pointLightPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-				lightSpaceMatrix = lightProjection * lightView;
-			}
+				
 
 			glEnable(GL_CULL_FACE); //Включить режим отсечения граней
 			glCullFace(GL_FRONT);	// отсечение задних граней
 			glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 
+			
+
+
 			shadowShader.use();
-			shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+			shadowShader.setFloat("far_plane", far_plane);
+			shadowShader.setVec3("lightPos", pointLightPosition);
+
+			shadowShader.setMat4("shadowMatrices[0]", shadowTransforms[0]);
+			shadowShader.setMat4("shadowMatrices[1]", shadowTransforms[1]);
+			shadowShader.setMat4("shadowMatrices[2]", shadowTransforms[2]);
+			shadowShader.setMat4("shadowMatrices[3]", shadowTransforms[3]);
+			shadowShader.setMat4("shadowMatrices[4]", shadowTransforms[4]);
+			shadowShader.setMat4("shadowMatrices[5]", shadowTransforms[5]);
+
 			glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			glClear(GL_DEPTH_BUFFER_BIT);
+
 			glm::mat4 model;
 
 
@@ -581,6 +606,7 @@ int main()
 
 		// Проход основной
 		{
+			glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
@@ -589,7 +615,7 @@ int main()
 
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+			
 
 			//настройка основных матриц: вида и проекции
 			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
@@ -604,17 +630,13 @@ int main()
 				ourShader.setMat4("view", view);
 
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, diffuseMap);
-				ourShader.setInt("texture_diffuse1", 0);
-
-				glActiveTexture(GL_TEXTURE1);
-				ourShader.setInt("shadowMap", 1);
-				glBindTexture(GL_TEXTURE_2D, depthMap);
+				ourShader.setInt("depthMap", 0);
+				glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 
 
 				ourShader.setVec3("lightPos", pointLightPosition);
 				ourShader.setVec3("viewPos", camera.Position);
-				ourShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+				ourShader.setFloat("far_plane", far_plane);
 			}
 
 
@@ -624,6 +646,9 @@ int main()
 				model = glm::translate(model, positionOfBox);
 				ourShader.setMat4("model", model);
 
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, diffuseMap);
+				ourShader.setInt("texture_diffuse1", 1);
 
 
 				glBindVertexArray(VAO);
@@ -638,9 +663,9 @@ int main()
 				model = glm::scale(model, scaleOfFloor);
 				ourShader.setMat4("model", model);
 
-				glActiveTexture(GL_TEXTURE0);
+				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, floorTexture);
-				ourShader.setInt("texture_diffuse1", 0);
+				ourShader.setInt("texture_diffuse1", 1);
 
 				glBindVertexArray(floorVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);

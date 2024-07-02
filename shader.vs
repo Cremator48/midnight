@@ -12,7 +12,6 @@ out vec4 FragPosLightSpace;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform mat4 lightSpaceMatrix;
 
 
 void main()
@@ -20,8 +19,6 @@ void main()
     FragPos = vec3(model * vec4(aPos, 1.0));
     TexCoords = aTexCoords;  
     Normal = transpose(inverse(mat3(model))) * aNormal;
-
-    FragPosLightSpace = lightSpaceMatrix * vec4(FragPos, 1.0);
     
     gl_Position = projection * view * vec4(FragPos, 1.0);
 }
