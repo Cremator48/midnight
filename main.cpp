@@ -445,7 +445,6 @@ int main()
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
 	Shader shadowShader("../midnight/shadow.vs", "../midnight/shadow.fs", NULL);
-	Shader testShader("../midnight/test.vs", "../midnight/test.fs", NULL);
 
 	unsigned int diffuseMap = loadTexture("../res/box.png");
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
@@ -458,6 +457,8 @@ int main()
 
 	float lastTime = glfwGetTime(); // ѕеременна€ хран€ща€ врем€ начала работы программы
 	int nbFrames = 0;
+
+
 
 	// Ѕуффер дл€ карты теней
 	unsigned int depthMapFBO;
@@ -517,10 +518,10 @@ int main()
 
 		glEnable(GL_DEPTH_TEST);
 
+		float time = glfwGetTime();
+		pointLightPosition.x = sin(time) * 2;
+		pointLightPosition.z = cos(time) * 2;
 		
-		glEnable(GL_CULL_FACE); //¬ключить режим отсечени€ граней
-		glCullFace(GL_BACK);	// отсечение задних граней
-		glFrontFace(GL_CCW);	// ѕередн€€ грань определ€етс€ "против часовой" стрелки
 		
 
 		glm::mat4 lightSpaceMatrix;
@@ -539,6 +540,9 @@ int main()
 				lightSpaceMatrix = lightProjection * lightView;
 			}
 
+			glEnable(GL_CULL_FACE); //¬ключить режим отсечени€ граней
+			glCullFace(GL_FRONT);	// отсечение задних граней
+			glFrontFace(GL_CCW);	// ѕередн€€ грань определ€етс€ "против часовой" стрелки
 
 			shadowShader.use();
 			shadowShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
@@ -578,6 +582,11 @@ int main()
 		// ѕроход основной
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+			glCullFace(GL_BACK);	// отсечение задних граней
+			glFrontFace(GL_CCW);	// ѕередн€€ грань определ€етс€ "против часовой" стрелки
+
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
@@ -621,6 +630,7 @@ int main()
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
+
 			// –ендеринг пола
 			{
 				model = glm::mat4(1.0f);
@@ -634,6 +644,26 @@ int main()
 
 				glBindVertexArray(floorVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			 
+
+			// –ендеринг куба источника света
+			{
+				model = glm::mat4(1.0f);
+
+				model = glm::translate(model, pointLightPosition);
+
+				model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
+
+				lightCubeShader.use();
+				lightCubeShader.setMat4("model", model);
+				lightCubeShader.setMat4("projection", projection);
+				lightCubeShader.setMat4("view", view);
+
+
+
+				glBindVertexArray(lightCubeVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 			
 		}
@@ -666,16 +696,6 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		positionOfBox.x = positionOfBox.x - 0.01f;
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		positionOfBox.x = positionOfBox.x + 0.01f;
-
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		positionOfBox.y = positionOfBox.y - 0.01f;
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		positionOfBox.y = positionOfBox.y + 0.01f;
 }
 
 // glfw: вс€кий раз, когда измен€ютс€ размеры окна (пользователем или операционной системой), вызываетс€ данна€ callback-функци€
