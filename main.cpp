@@ -450,7 +450,7 @@ int main()
 	unsigned int specularMap = loadTexture("../res/specular_map.png");
 	unsigned int floorTexture = loadTexture("../res/floor.png");
 
-	glm::vec3 pointLightPosition = glm::vec3(-2.0f, 2.0f, -1.0f);
+	glm::vec3 pointLightPosition = glm::vec3(0.0f);
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
@@ -490,7 +490,7 @@ int main()
 	float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
 	
 
-
+	bool reverse_normals;
 
 	
 	glm::vec3 scaleOfFloor(13.0f, 1.0f, 13.0f);
@@ -523,12 +523,14 @@ int main()
 
 
 		glEnable(GL_MULTISAMPLE);
-
+		//glEnable(GL_FRAMEBUFFER_SRGB); // автоматическая гамма коррекция
 		glEnable(GL_DEPTH_TEST);
 
+		/*
 		float time = glfwGetTime();
 		pointLightPosition.x = sin(time) * 2;
 		pointLightPosition.z = cos(time) * 2;
+		*/
 		
 		// Расчёт матриц трансформации кубической карты глубины
 		float near_plane = 1.0f, far_plane = 25.0f;
@@ -552,7 +554,7 @@ int main()
 				
 
 			glEnable(GL_CULL_FACE); //Включить режим отсечения граней
-			glCullFace(GL_FRONT);	// отсечение задних граней
+			glCullFace(GL_FRONT);	// отсечение передних граней
 			glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 
 			
@@ -578,17 +580,49 @@ int main()
 			glm::mat4 model;
 
 
-			// Рендеринг куба-объекта
+			// Рендеринг куба-объекта 1
 			{
 				model = glm::mat4(1.0f);
-				model = glm::translate(model, positionOfBox);
+				model = glm::translate(model, glm::vec3(-2.0, 0.0f, -2.0f));
 				shadowShader.setMat4("model", model);
 
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
+			// Рендеринг куба-объекта 2
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(-2.0, 0.0f, 2.0f));
+				shadowShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг куба-объекта 3
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(2.0, 0.0f, 2.0f));
+				shadowShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг куба-объекта 4
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(2.0, 0.0f, -2.0f));
+				shadowShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+
 			// Рендеринг пола
+			/*
 			{
 				model = glm::mat4(1.0f);
 				model = glm::translate(model, glm::vec3(0.0f, -1.3f, 0.0f));
@@ -597,6 +631,18 @@ int main()
 
 				glBindVertexArray(floorVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			*/
+
+			// Рендеринг куба-комнаты
+			{
+
+				model = glm::mat4(1.0f);
+				model = glm::scale(model, glm::vec3(10.0f));
+				shadowShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
 			
@@ -640,35 +686,102 @@ int main()
 			}
 
 
-			// Рендеринг куба-объекта
+			// Настройка текстур для следующих 4ёх кубов
 			{
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, positionOfBox);
-				ourShader.setMat4("model", model);
+				reverse_normals = false;
+				ourShader.setBool("reverse_normals", reverse_normals);
 
+				ourShader.setInt("texture_diffuse1", 1);
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, diffuseMap);
-				ourShader.setInt("texture_diffuse1", 1);
 
+				ourShader.setInt("texture_specular1", 2);
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, specularMap);
+			}
+
+
+			// Рендеринг куба-объекта 1
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(-2.0, 0.0f, -2.0f));
+				ourShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг куба-объекта 2
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(-2.0, 0.0f, 2.0f));
+				ourShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг куба-объекта 3
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(2.0, 0.0f, 2.0f));
+				ourShader.setMat4("model", model);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг куба-объекта 4
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(2.0, 0.0f, -2.0f));
+				ourShader.setMat4("model", model);
 
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
 
+
 			// Рендеринг пола
+			/*
 			{
 				model = glm::mat4(1.0f);
 				model = glm::translate(model, glm::vec3(0.0f, -1.3f, 0.0f));
 				model = glm::scale(model, scaleOfFloor);
 				ourShader.setMat4("model", model);
 
+				ourShader.setInt("texture_diffuse1", 1);
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, floorTexture);
-				ourShader.setInt("texture_diffuse1", 1);
+
+				ourShader.setInt("texture_specular1", 2);
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, 0);
+
 
 				glBindVertexArray(floorVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
+			*/
+
+			// Рендеринг куба-комнаты
+			{
+
+				glCullFace(GL_FRONT);
+				reverse_normals = true;
+				ourShader.setBool("reverse_normals", reverse_normals);
+				model = glm::mat4(1.0f);
+				model = glm::scale(model, glm::vec3(10.0f));
+				ourShader.setMat4("model", model);
+
+				ourShader.setInt("texture_diffuse1", 1);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, floorTexture);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+				glCullFace(GL_BACK);
 			}
 			 
 
@@ -690,6 +803,8 @@ int main()
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+
+
 			
 		}
 		
