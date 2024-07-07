@@ -33,6 +33,7 @@ float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
 glm::mat4 modelOfPlane = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
+glm::mat4 modelOfCube = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, 0.0f, -2.0f));
 
 
 int main()
@@ -75,6 +76,345 @@ int main()
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
+
+
+
+
+
+	// Координаты вершин куба
+	float cubeVerticesPositions[] =
+	{
+		/*--------------------------------------------------------------------*/
+			// Дальняя грань (против часовой)
+			 0.5f,  0.5f, -0.5f,	// 2
+			 0.5f, -0.5f, -0.5f,	// 1
+			-0.5f, -0.5f, -0.5f,	// 0
+
+			-0.5f, -0.5f, -0.5f,	// 0
+			-0.5f,  0.5f, -0.5f,	// 3
+			 0.5f,  0.5f, -0.5f,	// 2
+			 /*--------------------------------------------------------------------*/
+				 // Ближняя грань (против часовой)
+				 -0.5f, -0.5f,  0.5f,	// 4
+				  0.5f, -0.5f,  0.5f,	// 5
+				  0.5f,  0.5f,  0.5f,	// 6
+
+				  0.5f,  0.5f,  0.5f,	// 6
+				 -0.5f,  0.5f,  0.5f,	// 7
+				 -0.5f, -0.5f,  0.5f,	// 4
+				 /*--------------------------------------------------------------------*/
+					 // Левая грань (против часовой)
+					 -0.5f,  0.5f,  0.5f,	// 7
+					 -0.5f,  0.5f, -0.5f,	// 3
+					 -0.5f, -0.5f, -0.5f,	// 0
+
+					 -0.5f, -0.5f, -0.5f,	// 0
+					 -0.5f, -0.5f,  0.5f,	// 4
+					 -0.5f,  0.5f,  0.5f,	// 7 
+					 /*--------------------------------------------------------------------*/
+						  // Правая грань (против часовой)
+						  0.5f, -0.5f, -0.5f,	// 1
+						  0.5f,  0.5f, -0.5f,	// 2
+						  0.5f,  0.5f,  0.5f,	// 6
+
+						  0.5f,  0.5f,  0.5f,	// 6
+						  0.5f, -0.5f,  0.5f,	// 5
+						  0.5f, -0.5f, -0.5f,	// 1
+						  /*--------------------------------------------------------------------*/
+							  // Нижняя грань (против часовой)
+							  -0.5f, -0.5f, -0.5f,	// 0
+							   0.5f, -0.5f, -0.5f,	// 1
+							   0.5f, -0.5f,  0.5f,	// 5
+
+							   0.5f, -0.5f,  0.5f,  	// 5
+							  -0.5f, -0.5f,  0.5f,  	// 4
+							  -0.5f, -0.5f, -0.5f, 	// 0
+							  /*--------------------------------------------------------------------*/
+								   // Верхняя грань (против часовой)
+								   0.5f,  0.5f,  0.5f,  	// 6
+								   0.5f,  0.5f, -0.5f,	// 2
+								  -0.5f,  0.5f, -0.5f,	// 3	
+
+								  -0.5f,  0.5f, -0.5f,	// 3
+								  -0.5f,  0.5f,  0.5f,	// 7
+								   0.5f,  0.5f,  0.5f		// 6
+								   /*--------------------------------------------------------------------*/
+	};
+
+
+	// Перевод массива координат вершин float в массив vec3 позиций вершин
+	std::vector<glm::vec3> cubePositions;
+	int counter = 0;
+	while (counter < sizeof(cubeVerticesPositions)/sizeof(cubeVerticesPositions[0]))
+	{
+		cubePositions.push_back(glm::vec3(cubeVerticesPositions[counter], cubeVerticesPositions[counter + 1], cubeVerticesPositions[counter + 2]));
+		counter = counter + 3;
+	}
+
+	
+
+	// Нормали куба
+	float cubeVerticesNormals[] =
+	{
+		/*--------------------------------------------------------------------*/
+			// Дальняя грань (против часовой)
+			 0.0f,  0.0f, -1.0f,	// 2	
+			 0.0f,  0.0f, -1.0f,	// 1
+			 0.0f,  0.0f, -1.0f,	// 0
+
+			 0.0f,  0.0f, -1.0f,	// 0
+			 0.0f,  0.0f, -1.0f,	// 3
+			 0.0f,  0.0f, -1.0f,	// 2
+
+			 /*--------------------------------------------------------------------*/
+				 // Ближняя грань (против часовой)
+				  0.0f,  0.0f, 1.0f,		// 4	
+				  0.0f,  0.0f, 1.0f,		// 5
+				  0.0f,  0.0f, 1.0f,		// 6
+
+				  0.0f,  0.0f, 1.0f,		// 6
+				  0.0f,  0.0f, 1.0f,		// 7
+				  0.0f,  0.0f, 1.0f,		// 4
+
+				  /*--------------------------------------------------------------------*/
+					  // Левая грань (против часовой)
+					   -1.0f,  0.0f,  0.0f,	// 7	
+					   -1.0f,  0.0f,  0.0f,	// 3
+					   -1.0f,  0.0f,  0.0f,	// 0
+
+					   -1.0f,  0.0f,  0.0f,	// 0
+					   -1.0f,  0.0f,  0.0f,	// 4
+					   -1.0f,  0.0f,  0.0f,	// 7
+
+					   /*--------------------------------------------------------------------*/
+						   // Правая грань (против часовой)
+							1.0f,  0.0f,  0.0f,	// 1	
+							1.0f,  0.0f,  0.0f,	// 2
+							1.0f,  0.0f,  0.0f,	// 6	
+
+							1.0f,  0.0f,  0.0f,	// 6
+							1.0f,  0.0f,  0.0f,	// 5
+							1.0f,  0.0f,  0.0f,	// 1
+
+							/*--------------------------------------------------------------------*/
+								// Нижняя грань (против часовой)
+								 0.0f, -1.0f,  0.0f, 	// 0	
+								 0.0f, -1.0f,  0.0f,	// 1
+								 0.0f, -1.0f,  0.0f,	// 5
+
+								 0.0f, -1.0f,  0.0f,	// 5
+								 0.0f, -1.0f,  0.0f,	// 4
+								 0.0f, -1.0f,  0.0f,	// 0
+
+								 /*--------------------------------------------------------------------*/
+									 // Верхняя грань (против часовой)
+									  0.0f,  1.0f,  0.0f,	// 6	
+									  0.0f,  1.0f,  0.0f,	// 2
+									  0.0f,  1.0f,  0.0f,	// 3	
+
+									  0.0f,  1.0f,  0.0f,	// 3
+									  0.0f,  1.0f,  0.0f,	// 7
+									  0.0f,  1.0f,  0.0f	// 6
+
+									  /*--------------------------------------------------------------------*/
+	};
+
+	// Перевод массива нормалей вершин float в массив vec3 нормалей вершин
+	std::vector<glm::vec3> cubeNormals;
+	counter = 0;
+	while (counter < sizeof(cubeVerticesNormals) / sizeof(cubeVerticesNormals[0]))
+	{
+		cubeNormals.push_back(glm::vec3(cubeVerticesNormals[counter], cubeVerticesNormals[counter + 1], cubeVerticesNormals[counter + 2]));
+		counter = counter + 3;
+	}
+
+
+
+
+
+
+	// Текстурные координаты куба
+	float cubeVerticesTextureCoords[] =
+	{
+		/*--------------------------------------------------------------------*/
+		// Дальняя грань (против часовой)
+		1.0f, 1.0f,	// 2	
+		1.0f, 0.0f,	// 1
+		0.0f, 0.0f,	// 0
+
+		0.0f, 0.0f,	// 0
+		0.0f, 1.0f,   // 3
+		1.0f, 1.0f,   // 2
+
+		/*--------------------------------------------------------------------*/
+		 // Ближняя грань (против часовой)
+		0.0f, 0.0f,	// 4	
+		1.0f, 0.0f,	// 5
+		1.0f, 1.0f,	// 6
+
+		1.0f, 1.0f,	// 6
+		0.0f, 1.0f,	// 7
+		0.0f, 0.0f,	// 4
+
+		/*--------------------------------------------------------------------*/
+		 // Левая грань (против часовой)
+		1.0f, 0.0f,	// 7	
+		1.0f, 1.0f,	// 3
+		0.0f, 1.0f,	// 0
+
+		0.0f, 1.0f,	// 0
+		0.0f, 0.0f,	// 4
+		1.0f, 0.0f,	// 7
+
+		/*--------------------------------------------------------------------*/
+		 // Правая грань (против часовой)
+		0.0f, 1.0f,	// 1	
+		1.0f, 1.0f,	// 2
+		1.0f, 0.0f,	// 6	
+
+		1.0f, 0.0f,	// 6
+		0.0f, 0.0f,	// 5
+		0.0f, 1.0f,	// 1
+
+		/*--------------------------------------------------------------------*/
+		 // Нижняя грань (против часовой)
+		0.0f, 1.0f, 	// 0	
+		1.0f, 1.0f,	// 1
+		1.0f, 0.0f,	// 5
+
+		1.0f, 0.0f,	// 5
+		0.0f, 0.0f,	// 4
+		0.0f, 1.0f,	// 0
+
+		/*--------------------------------------------------------------------*/
+		 // Верхняя грань (против часовой)
+		1.0f, 0.0f,	// 6	
+		1.0f, 1.0f,	// 2
+		0.0f, 1.0f,	// 3	
+
+		0.0f, 1.0f,	// 3
+		0.0f, 0.0f,	// 7
+		1.0f, 0.0f	// 6
+
+		/*--------------------------------------------------------------------*/
+	};
+
+
+
+	// Перевод массива текстурных координат вершин float в массив vec2 текстурных координат
+	std::vector<glm::vec2> cubeTextures;
+	counter = 0;
+	while (counter < (sizeof(cubeVerticesTextureCoords) / sizeof(cubeVerticesTextureCoords[0])))
+	{
+		cubeTextures.push_back(glm::vec2(cubeVerticesTextureCoords[counter], cubeVerticesTextureCoords[counter + 1]));
+		counter = counter + 2;
+	}
+
+
+	// Массивы касательных и бикасательных для куба
+	float cubeTangent[36];
+	float cubeBitangent[36];
+
+	// здесь расчитываем и наполняем массивы касательных и бикасательных
+	counter = 0;
+	while(counter < (sizeof(cubeTangent) / sizeof(cubeTangent[0])))
+	{
+
+		// Координаты
+		glm::vec3 pos1(cubePositions[counter]);
+		glm::vec3 pos2(cubePositions[counter+1]);
+		glm::vec3 pos3(cubePositions[counter+2]);
+
+		// Текстурные координаты
+		glm::vec2 uv1(cubeTextures[counter]);
+		glm::vec2 uv2(cubeTextures[counter+1]);
+		glm::vec2 uv3(cubeTextures[counter+2]);
+
+		// Вектор нормали
+		glm::vec3 nm(cubeNormals[counter]);
+
+		// Треугольник
+		glm::vec3 edge1 = pos2 - pos1;
+		glm::vec3 edge2 = pos3 - pos1;
+		glm::vec2 deltaUV1 = uv2 - uv1;
+		glm::vec2 deltaUV2 = uv3 - uv1;
+
+		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		cubeTangent[counter] = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		cubeTangent[counter+1] = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		cubeTangent[counter+2] = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+		cubeBitangent[counter] = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		cubeBitangent[counter+1] = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		cubeBitangent[counter+2] = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+		counter = counter + 3;
+
+	}
+
+	counter = 0;
+	int string = 0;
+	while (counter < (sizeof(cubeTangent) / sizeof(cubeTangent[0])))
+	{
+		std::cout << '[' << string << "] " << cubeTangent[counter] << ' ' << cubeTangent[counter + 1] << ' ' << cubeTangent[counter+ 2] << '\n';
+		counter = counter + 3;
+		string = string + 1;
+	}
+
+	
+	
+
+	// Настройка VAO и VBO для куба с картами нормалей
+	unsigned int cubeVAO, cubeVBO;
+	{
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &cubeVBO);
+
+		glBindVertexArray(cubeVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, 
+			sizeof(cubeVerticesPositions)
+			+sizeof(cubeVerticesNormals)
+			+sizeof(cubeVerticesTextureCoords)
+			+sizeof(cubeTangent) 
+			+sizeof(cubeBitangent), 
+			NULL, // Не указываем адрес данных
+			GL_STATIC_DRAW);
+
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), sizeof(cubeVerticesNormals), &cubeVerticesNormals);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals), sizeof(cubeVerticesTextureCoords), &cubeVerticesTextureCoords);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords), sizeof(cubeTangent), &cubeTangent);
+		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords) + sizeof(cubeTangent), sizeof(cubeBitangent), &cubeBitangent);
+
+
+
+		// Координатный атрибут
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+		glEnableVertexAttribArray(0);
+
+		// Атрибут нормалей
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)));
+		glEnableVertexAttribArray(1);
+
+		// Атрибут текстурных координат
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals)));
+		glEnableVertexAttribArray(2);
+
+		// Атрибут касательных
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals)+ sizeof(cubeVerticesTextureCoords)));
+		glEnableVertexAttribArray(3);
+
+		// Атрибут бикасательных
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords)+sizeof(cubeTangent)));
+		glEnableVertexAttribArray(4);
+
+		glBindVertexArray(0);
+	}
+
 
 	// Координаты
 	glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
@@ -140,66 +480,8 @@ int main()
 		pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
 	};
 
-	float cubeVerticesPositions[] =
-	{
-		/*--------------------------------------------------------------------*/
-			
-			 0.5f,  0.5f, -0.5f,	// 2
-			 0.5f, -0.5f, -0.5f,	// 1
-			-0.5f, -0.5f, -0.5f,	// 0
 
-			-0.5f, -0.5f, -0.5f,	// 0
-			-0.5f,  0.5f, -0.5f,	// 3
-			 0.5f,  0.5f, -0.5f,	// 2
-			 /*--------------------------------------------------------------------*/
-				 
-				 -0.5f, -0.5f,  0.5f,	// 4
-				  0.5f, -0.5f,  0.5f,	// 5
-				  0.5f,  0.5f,  0.5f,	// 6
-
-				  0.5f,  0.5f,  0.5f,	// 6
-				 -0.5f,  0.5f,  0.5f,	// 7
-				 -0.5f, -0.5f,  0.5f,	// 4
-				 /*--------------------------------------------------------------------*/
-					 
-					 -0.5f,  0.5f,  0.5f,	// 7
-					 -0.5f,  0.5f, -0.5f,	// 3
-					 -0.5f, -0.5f, -0.5f,	// 0
-
-					 -0.5f, -0.5f, -0.5f,	// 0
-					 -0.5f, -0.5f,  0.5f,	// 4
-					 -0.5f,  0.5f,  0.5f,	// 7 
-					 /*--------------------------------------------------------------------*/
-						  
-						  0.5f, -0.5f, -0.5f,	// 1
-						  0.5f,  0.5f, -0.5f,	// 2
-						  0.5f,  0.5f,  0.5f,	// 6
-
-						  0.5f,  0.5f,  0.5f,	// 6
-						  0.5f, -0.5f,  0.5f,	// 5
-						  0.5f, -0.5f, -0.5f,	// 1
-						  /*--------------------------------------------------------------------*/
-							  
-							  -0.5f, -0.5f, -0.5f,	// 0
-							   0.5f, -0.5f, -0.5f,	// 1
-							   0.5f, -0.5f,  0.5f,	// 5
-
-							   0.5f, -0.5f,  0.5f,  	// 5
-							  -0.5f, -0.5f,  0.5f,  	// 4
-							  -0.5f, -0.5f, -0.5f, 	// 0
-							  /*--------------------------------------------------------------------*/
-								   
-								   0.5f,  0.5f,  0.5f,  	// 6
-								   0.5f,  0.5f, -0.5f,	// 2
-								  -0.5f,  0.5f, -0.5f,	// 3	
-
-								  -0.5f,  0.5f, -0.5f,	// 3
-								  -0.5f,  0.5f,  0.5f,	// 7
-								   0.5f,  0.5f,  0.5f		// 6
-								   /*--------------------------------------------------------------------*/
-	};
-
-	// VAO и VBO для куба-объекта
+	// VAO и VBO для прямоугольника-объекта
 	unsigned int VAO, VBO;
 	{
 		glGenVertexArrays(1, &VAO);
@@ -210,7 +492,7 @@ int main()
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-		
+
 
 		// Координатный атрибут
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), 0);
@@ -274,8 +556,8 @@ int main()
 	float lastTime = glfwGetTime(); // Переменная хранящая время начала работы программы
 	int nbFrames = 0;
 
-	
-	
+
+
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -320,7 +602,7 @@ int main()
 
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
+
 
 			//настройка основных матриц: вида и проекции
 			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
@@ -336,14 +618,14 @@ int main()
 
 				ourShader.setVec3("lightPos", pointLightPosition);
 				ourShader.setVec3("viewPos", camera.Position);
-				
+
 			}
 
 
 
 			// Рендеринг объекта
 			{
-								
+
 				ourShader.setMat4("model", modelOfPlane);
 
 				ourShader.setInt("texture_diffuse1", 0);
@@ -358,6 +640,21 @@ int main()
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 			}
 
+			// Рендеринг куба с нормалями
+			{
+				ourShader.setMat4("model", modelOfCube);
+
+				ourShader.setInt("texture_diffuse1", 0);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, brickWall);
+
+				ourShader.setInt("texture_normal1", 1);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, BrickWallNormal);
+
+				glBindVertexArray(cubeVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
 
 
 
@@ -381,11 +678,11 @@ int main()
 			}
 
 
-			
-		}
-		
 
-		
+		}
+
+
+
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
@@ -415,22 +712,22 @@ void processInput(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		modelOfPlane = glm::rotate(modelOfPlane, glm::radians(1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		modelOfPlane = glm::rotate(modelOfPlane, glm::radians(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
 	{
-		modelOfPlane = glm::rotate(modelOfPlane, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
 	{
-		modelOfPlane = glm::rotate(modelOfPlane, glm::radians(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 	}
 }
 

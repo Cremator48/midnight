@@ -23,7 +23,7 @@ void main()
     vec3 normal = texture(texture_normal1, fs_in.TexCoords).rgb;
 	
     
-    normal = normalize(normal * 2.0 - 1.0);  // данная нормаль находится в касательном пространстве
+    normal = normalize(normal * 2.0 - 1.0);
    
     
     vec3 color = texture(texture_diffuse1, fs_in.TexCoords).rgb;
