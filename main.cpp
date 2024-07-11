@@ -38,6 +38,7 @@ glm::mat4 modelOfCube = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, 0.0f, -2
 
 int main()
 {
+	setlocale(LC_ALL, "Russian");
 	std::cout << "Naked program!\n";
 
 	// glfw: инициализаци€ и конфигурирование
@@ -219,19 +220,6 @@ int main()
 									  /*--------------------------------------------------------------------*/
 	};
 
-	// ѕеревод массива нормалей вершин float в массив vec3 нормалей вершин
-	std::vector<glm::vec3> cubeNormals;
-	counter = 0;
-	while (counter < sizeof(cubeVerticesNormals) / sizeof(cubeVerticesNormals[0]))
-	{
-		cubeNormals.push_back(glm::vec3(cubeVerticesNormals[counter], cubeVerticesNormals[counter + 1], cubeVerticesNormals[counter + 2]));
-		counter = counter + 3;
-	}
-
-
-
-
-
 
 	// “екстурные координаты куба
 	float cubeVerticesTextureCoords[] =
@@ -278,7 +266,7 @@ int main()
 
 		/*--------------------------------------------------------------------*/
 		 // Ќижн€€ грань (против часовой)
-		0.0f, 1.0f, 	// 0	
+		0.0f, 1.0f, // 0	
 		1.0f, 1.0f,	// 1
 		1.0f, 0.0f,	// 5
 
@@ -312,8 +300,12 @@ int main()
 
 
 	// ћассивы касательных и бикасательных дл€ куба
-	float cubeTangent[36];
-	float cubeBitangent[36];
+
+	std::vector<glm::vec3> CubeTangentVector(108);
+	std::vector<glm::vec3> CubeBitangentVector(108);
+
+	float cubeTangent[108];
+	float cubeBitangent[108];
 
 	// здесь расчитываем и наполн€ем массивы касательных и бикасательных
 	counter = 0;
@@ -330,9 +322,6 @@ int main()
 		glm::vec2 uv2(cubeTextures[counter+1]);
 		glm::vec2 uv3(cubeTextures[counter+2]);
 
-		// ¬ектор нормали
-		glm::vec3 nm(cubeNormals[counter]);
-
 		// “реугольник
 		glm::vec3 edge1 = pos2 - pos1;
 		glm::vec3 edge2 = pos3 - pos1;
@@ -341,29 +330,49 @@ int main()
 
 		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
 
-		cubeTangent[counter] = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-		cubeTangent[counter+1] = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-		cubeTangent[counter+2] = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+		float x, y, z;
 
-		cubeBitangent[counter] = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-		cubeBitangent[counter+1] = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-		cubeBitangent[counter+2] = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+		// Ёто x, y, z касательной вершины труегольника
+
+		x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+		CubeTangentVector[counter]	   = glm::vec3(x, y, z);	
+		CubeTangentVector[counter + 1] = glm::vec3(x, y, z);	
+		CubeTangentVector[counter + 2] = glm::vec3(x, y, z);;
+
+
+		x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+		CubeBitangentVector[counter]	 = glm::vec3(x, y, z);
+		CubeBitangentVector[counter + 1] = glm::vec3(x, y, z);
+		CubeBitangentVector[counter + 2] = glm::vec3(x, y, z);
+
+	
 
 		counter = counter + 3;
 
 	}
 
+
+	int i = 0;
 	counter = 0;
-	int string = 0;
-	while (counter < (sizeof(cubeTangent) / sizeof(cubeTangent[0])))
+	while(counter < CubeTangentVector.size())
 	{
-		std::cout << '[' << string << "] " << cubeTangent[counter] << ' ' << cubeTangent[counter + 1] << ' ' << cubeTangent[counter+ 2] << '\n';
-		counter = counter + 3;
-		string = string + 1;
-	}
+		cubeTangent[i]     = CubeTangentVector[counter].x;
+		cubeTangent[i + 1] = CubeTangentVector[counter].y;
+		cubeTangent[i + 2] = CubeTangentVector[counter].z;
 
-	
-	
+		cubeBitangent[i]     = CubeBitangentVector[counter].x;
+		cubeBitangent[i + 1] = CubeBitangentVector[counter].y;
+		cubeBitangent[i + 2] = CubeBitangentVector[counter].z;
+
+		i = i + 3;
+		counter = counter + 1;
+	}
 
 	// Ќастройка VAO и VBO дл€ куба с картами нормалей
 	unsigned int cubeVAO, cubeVBO;
