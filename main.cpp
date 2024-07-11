@@ -543,6 +543,7 @@ int main()
 
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
+	Shader normalShader("../midnight/normalShader.vs", "../midnight/normalShader.fs", "../midnight/normalShader.gs");
 
 	unsigned int brickWall = loadTexture("../res/brickwall.png");
 	unsigned int BrickWallNormal = loadTexture("../res/brickwall_normal.png");
@@ -605,7 +606,7 @@ int main()
 
 
 			//настройка основных матриц: вида и проекции
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10.0f);
 			glm::mat4 view = camera.GetViewMatrix();
 			glm::mat4 model;
 
@@ -625,7 +626,7 @@ int main()
 
 			// Рендеринг объекта
 			{
-
+				ourShader.use();
 				ourShader.setMat4("model", modelOfPlane);
 
 				ourShader.setInt("texture_diffuse1", 0);
@@ -638,10 +639,21 @@ int main()
 
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
+
+				// Рендеринг линий нормали
+				normalShader.use();
+				normalShader.setMat4("projection", projection);
+				normalShader.setMat4("view", view);
+				normalShader.setMat4("model", modelOfPlane);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+				
+				
+
 			}
 
 			// Рендеринг куба с нормалями
 			{
+				ourShader.use();
 				ourShader.setMat4("model", modelOfCube);
 
 				ourShader.setInt("texture_diffuse1", 0);
@@ -653,6 +665,13 @@ int main()
 				glBindTexture(GL_TEXTURE_2D, BrickWallNormal);
 
 				glBindVertexArray(cubeVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+
+				// Рендеринг линий нормали
+				normalShader.use();
+				normalShader.setMat4("projection", projection);
+				normalShader.setMat4("view", view);
+				normalShader.setMat4("model", modelOfCube);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
@@ -676,6 +695,9 @@ int main()
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+
+			
+
 
 
 
