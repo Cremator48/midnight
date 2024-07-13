@@ -33,7 +33,6 @@ float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
 glm::mat4 modelOfPlane = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f));
-glm::mat4 modelOfCube = glm::translate(glm::mat4(1.0f), glm::vec3(4.0f, 0.0f, -2.0f));
 
 
 int main()
@@ -76,352 +75,6 @@ int main()
 	{
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
-	}
-
-
-
-
-
-	// Координаты вершин куба
-	float cubeVerticesPositions[] =
-	{
-		/*--------------------------------------------------------------------*/
-			// Дальняя грань (против часовой)
-			 0.5f,  0.5f, -0.5f,	// 2
-			 0.5f, -0.5f, -0.5f,	// 1
-			-0.5f, -0.5f, -0.5f,	// 0
-
-			-0.5f, -0.5f, -0.5f,	// 0
-			-0.5f,  0.5f, -0.5f,	// 3
-			 0.5f,  0.5f, -0.5f,	// 2
-			 /*--------------------------------------------------------------------*/
-				 // Ближняя грань (против часовой)
-				 -0.5f, -0.5f,  0.5f,	// 4
-				  0.5f, -0.5f,  0.5f,	// 5
-				  0.5f,  0.5f,  0.5f,	// 6
-
-				  0.5f,  0.5f,  0.5f,	// 6
-				 -0.5f,  0.5f,  0.5f,	// 7
-				 -0.5f, -0.5f,  0.5f,	// 4
-				 /*--------------------------------------------------------------------*/
-					 // Левая грань (против часовой)
-					 -0.5f,  0.5f,  0.5f,	// 7
-					 -0.5f,  0.5f, -0.5f,	// 3
-					 -0.5f, -0.5f, -0.5f,	// 0
-
-					 -0.5f, -0.5f, -0.5f,	// 0
-					 -0.5f, -0.5f,  0.5f,	// 4
-					 -0.5f,  0.5f,  0.5f,	// 7 
-					 /*--------------------------------------------------------------------*/
-						  // Правая грань (против часовой)
-						  0.5f, -0.5f, -0.5f,	// 1
-						  0.5f,  0.5f, -0.5f,	// 2
-						  0.5f,  0.5f,  0.5f,	// 6
-
-						  0.5f,  0.5f,  0.5f,	// 6
-						  0.5f, -0.5f,  0.5f,	// 5
-						  0.5f, -0.5f, -0.5f,	// 1
-						  /*--------------------------------------------------------------------*/
-							  // Нижняя грань (против часовой)
-							  -0.5f, -0.5f, -0.5f,	// 0
-							   0.5f, -0.5f, -0.5f,	// 1
-							   0.5f, -0.5f,  0.5f,	// 5
-
-							   0.5f, -0.5f,  0.5f,  	// 5
-							  -0.5f, -0.5f,  0.5f,  	// 4
-							  -0.5f, -0.5f, -0.5f, 	// 0
-							  /*--------------------------------------------------------------------*/
-								   // Верхняя грань (против часовой)
-								   0.5f,  0.5f,  0.5f,  	// 6
-								   0.5f,  0.5f, -0.5f,	// 2
-								  -0.5f,  0.5f, -0.5f,	// 3	
-
-								  -0.5f,  0.5f, -0.5f,	// 3
-								  -0.5f,  0.5f,  0.5f,	// 7
-								   0.5f,  0.5f,  0.5f		// 6
-								   /*--------------------------------------------------------------------*/
-	};
-
-
-	// Перевод массива координат вершин float в массив vec3 позиций вершин
-	std::vector<glm::vec3> cubePositions;
-	int counter = 0;
-	while (counter < sizeof(cubeVerticesPositions)/sizeof(cubeVerticesPositions[0]))
-	{
-		cubePositions.push_back(glm::vec3(cubeVerticesPositions[counter], cubeVerticesPositions[counter + 1], cubeVerticesPositions[counter + 2]));
-		counter = counter + 3;
-	}
-
-	
-
-	// Нормали куба
-	float cubeVerticesNormals[] =
-	{
-		/*--------------------------------------------------------------------*/
-			// Дальняя грань (против часовой)
-			 0.0f,  0.0f, -1.0f,	// 2	
-			 0.0f,  0.0f, -1.0f,	// 1
-			 0.0f,  0.0f, -1.0f,	// 0
-
-			 0.0f,  0.0f, -1.0f,	// 0
-			 0.0f,  0.0f, -1.0f,	// 3
-			 0.0f,  0.0f, -1.0f,	// 2
-
-			 /*--------------------------------------------------------------------*/
-				 // Ближняя грань (против часовой)
-				  0.0f,  0.0f, 1.0f,		// 4	
-				  0.0f,  0.0f, 1.0f,		// 5
-				  0.0f,  0.0f, 1.0f,		// 6
-
-				  0.0f,  0.0f, 1.0f,		// 6
-				  0.0f,  0.0f, 1.0f,		// 7
-				  0.0f,  0.0f, 1.0f,		// 4
-
-				  /*--------------------------------------------------------------------*/
-					  // Левая грань (против часовой)
-					   -1.0f,  0.0f,  0.0f,	// 7	
-					   -1.0f,  0.0f,  0.0f,	// 3
-					   -1.0f,  0.0f,  0.0f,	// 0
-
-					   -1.0f,  0.0f,  0.0f,	// 0
-					   -1.0f,  0.0f,  0.0f,	// 4
-					   -1.0f,  0.0f,  0.0f,	// 7
-
-					   /*--------------------------------------------------------------------*/
-						   // Правая грань (против часовой)
-							1.0f,  0.0f,  0.0f,	// 1	
-							1.0f,  0.0f,  0.0f,	// 2
-							1.0f,  0.0f,  0.0f,	// 6	
-
-							1.0f,  0.0f,  0.0f,	// 6
-							1.0f,  0.0f,  0.0f,	// 5
-							1.0f,  0.0f,  0.0f,	// 1
-
-							/*--------------------------------------------------------------------*/
-								// Нижняя грань (против часовой)
-								 0.0f, -1.0f,  0.0f, 	// 0	
-								 0.0f, -1.0f,  0.0f,	// 1
-								 0.0f, -1.0f,  0.0f,	// 5
-
-								 0.0f, -1.0f,  0.0f,	// 5
-								 0.0f, -1.0f,  0.0f,	// 4
-								 0.0f, -1.0f,  0.0f,	// 0
-
-								 /*--------------------------------------------------------------------*/
-									 // Верхняя грань (против часовой)
-									  0.0f,  1.0f,  0.0f,	// 6	
-									  0.0f,  1.0f,  0.0f,	// 2
-									  0.0f,  1.0f,  0.0f,	// 3	
-
-									  0.0f,  1.0f,  0.0f,	// 3
-									  0.0f,  1.0f,  0.0f,	// 7
-									  0.0f,  1.0f,  0.0f	// 6
-
-									  /*--------------------------------------------------------------------*/
-	};
-
-
-	// Текстурные координаты куба
-	float cubeVerticesTextureCoords[] =
-	{
-		/*--------------------------------------------------------------------*/
-		// Дальняя грань (против часовой)
-		1.0f, 1.0f,	// 2	
-		1.0f, 0.0f,	// 1
-		0.0f, 0.0f,	// 0
-
-		0.0f, 0.0f,	// 0
-		0.0f, 1.0f,   // 3
-		1.0f, 1.0f,   // 2
-
-		/*--------------------------------------------------------------------*/
-		 // Ближняя грань (против часовой)
-		0.0f, 0.0f,	// 4	
-		1.0f, 0.0f,	// 5
-		1.0f, 1.0f,	// 6
-
-		1.0f, 1.0f,	// 6
-		0.0f, 1.0f,	// 7
-		0.0f, 0.0f,	// 4
-
-		/*--------------------------------------------------------------------*/
-		 // Левая грань (против часовой)
-		1.0f, 0.0f,	// 7	
-		1.0f, 1.0f,	// 3
-		0.0f, 1.0f,	// 0
-
-		0.0f, 1.0f,	// 0
-		0.0f, 0.0f,	// 4
-		1.0f, 0.0f,	// 7
-
-		/*--------------------------------------------------------------------*/
-		 // Правая грань (против часовой)
-		0.0f, 1.0f,	// 1	
-		1.0f, 1.0f,	// 2
-		1.0f, 0.0f,	// 6	
-
-		1.0f, 0.0f,	// 6
-		0.0f, 0.0f,	// 5
-		0.0f, 1.0f,	// 1
-
-		/*--------------------------------------------------------------------*/
-		 // Нижняя грань (против часовой)
-		0.0f, 1.0f, // 0	
-		1.0f, 1.0f,	// 1
-		1.0f, 0.0f,	// 5
-
-		1.0f, 0.0f,	// 5
-		0.0f, 0.0f,	// 4
-		0.0f, 1.0f,	// 0
-
-		/*--------------------------------------------------------------------*/
-		 // Верхняя грань (против часовой)
-		1.0f, 0.0f,	// 6	
-		1.0f, 1.0f,	// 2
-		0.0f, 1.0f,	// 3	
-
-		0.0f, 1.0f,	// 3
-		0.0f, 0.0f,	// 7
-		1.0f, 0.0f	// 6
-
-		/*--------------------------------------------------------------------*/
-	};
-
-
-
-	// Перевод массива текстурных координат вершин float в массив vec2 текстурных координат
-	std::vector<glm::vec2> cubeTextures;
-	counter = 0;
-	while (counter < (sizeof(cubeVerticesTextureCoords) / sizeof(cubeVerticesTextureCoords[0])))
-	{
-		cubeTextures.push_back(glm::vec2(cubeVerticesTextureCoords[counter], cubeVerticesTextureCoords[counter + 1]));
-		counter = counter + 2;
-	}
-
-
-	// Массивы касательных и бикасательных для куба
-
-	std::vector<glm::vec3> CubeTangentVector(108);
-	std::vector<glm::vec3> CubeBitangentVector(108);
-
-	float cubeTangent[108];
-	float cubeBitangent[108];
-
-	// здесь расчитываем и наполняем массивы касательных и бикасательных
-	counter = 0;
-	while(counter < (sizeof(cubeTangent) / sizeof(cubeTangent[0])))
-	{
-
-		// Координаты
-		glm::vec3 pos1(cubePositions[counter]);
-		glm::vec3 pos2(cubePositions[counter+1]);
-		glm::vec3 pos3(cubePositions[counter+2]);
-
-		// Текстурные координаты
-		glm::vec2 uv1(cubeTextures[counter]);
-		glm::vec2 uv2(cubeTextures[counter+1]);
-		glm::vec2 uv3(cubeTextures[counter+2]);
-
-		// Треугольник
-		glm::vec3 edge1 = pos2 - pos1;
-		glm::vec3 edge2 = pos3 - pos1;
-		glm::vec2 deltaUV1 = uv2 - uv1;
-		glm::vec2 deltaUV2 = uv3 - uv1;
-
-		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-
-		float x, y, z;
-
-		// Это x, y, z касательной вершины труегольника
-
-		x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-		y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-		z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-
-		CubeTangentVector[counter]	   = glm::vec3(x, y, z);	
-		CubeTangentVector[counter + 1] = glm::vec3(x, y, z);	
-		CubeTangentVector[counter + 2] = glm::vec3(x, y, z);;
-
-
-		x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-		y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-		z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-
-		CubeBitangentVector[counter]	 = glm::vec3(x, y, z);
-		CubeBitangentVector[counter + 1] = glm::vec3(x, y, z);
-		CubeBitangentVector[counter + 2] = glm::vec3(x, y, z);
-
-	
-
-		counter = counter + 3;
-
-	}
-
-
-	int i = 0;
-	counter = 0;
-	while(counter < CubeTangentVector.size())
-	{
-		cubeTangent[i]     = CubeTangentVector[counter].x;
-		cubeTangent[i + 1] = CubeTangentVector[counter].y;
-		cubeTangent[i + 2] = CubeTangentVector[counter].z;
-
-		cubeBitangent[i]     = CubeBitangentVector[counter].x;
-		cubeBitangent[i + 1] = CubeBitangentVector[counter].y;
-		cubeBitangent[i + 2] = CubeBitangentVector[counter].z;
-
-		i = i + 3;
-		counter = counter + 1;
-	}
-
-	// Настройка VAO и VBO для куба с картами нормалей
-	unsigned int cubeVAO, cubeVBO;
-	{
-		glGenVertexArrays(1, &cubeVAO);
-		glGenBuffers(1, &cubeVBO);
-
-		glBindVertexArray(cubeVAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, 
-			sizeof(cubeVerticesPositions)
-			+sizeof(cubeVerticesNormals)
-			+sizeof(cubeVerticesTextureCoords)
-			+sizeof(cubeTangent) 
-			+sizeof(cubeBitangent), 
-			NULL, // Не указываем адрес данных
-			GL_STATIC_DRAW);
-
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), sizeof(cubeVerticesNormals), &cubeVerticesNormals);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals), sizeof(cubeVerticesTextureCoords), &cubeVerticesTextureCoords);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords), sizeof(cubeTangent), &cubeTangent);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords) + sizeof(cubeTangent), sizeof(cubeBitangent), &cubeBitangent);
-
-
-
-		// Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-		glEnableVertexAttribArray(0);
-
-		// Атрибут нормалей
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)));
-		glEnableVertexAttribArray(1);
-
-		// Атрибут текстурных координат
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals)));
-		glEnableVertexAttribArray(2);
-
-		// Атрибут касательных
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals)+ sizeof(cubeVerticesTextureCoords)));
-		glEnableVertexAttribArray(3);
-
-		// Атрибут бикасательных
-		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals) + sizeof(cubeVerticesTextureCoords)+sizeof(cubeTangent)));
-		glEnableVertexAttribArray(4);
-
-		glBindVertexArray(0);
 	}
 
 
@@ -527,6 +180,64 @@ int main()
 
 	}
 
+	float cubeVerticesPositions[] =
+	{
+		/*--------------------------------------------------------------------*/
+
+			 0.5f,  0.5f, -0.5f,	// 2
+			 0.5f, -0.5f, -0.5f,	// 1
+			-0.5f, -0.5f, -0.5f,	// 0
+
+			-0.5f, -0.5f, -0.5f,	// 0
+			-0.5f,  0.5f, -0.5f,	// 3
+			 0.5f,  0.5f, -0.5f,	// 2
+			 /*--------------------------------------------------------------------*/
+
+				 -0.5f, -0.5f,  0.5f,	// 4
+				  0.5f, -0.5f,  0.5f,	// 5
+				  0.5f,  0.5f,  0.5f,	// 6
+
+				  0.5f,  0.5f,  0.5f,	// 6
+				 -0.5f,  0.5f,  0.5f,	// 7
+				 -0.5f, -0.5f,  0.5f,	// 4
+				 /*--------------------------------------------------------------------*/
+
+					 -0.5f,  0.5f,  0.5f,	// 7
+					 -0.5f,  0.5f, -0.5f,	// 3
+					 -0.5f, -0.5f, -0.5f,	// 0
+
+					 -0.5f, -0.5f, -0.5f,	// 0
+					 -0.5f, -0.5f,  0.5f,	// 4
+					 -0.5f,  0.5f,  0.5f,	// 7 
+					 /*--------------------------------------------------------------------*/
+
+						  0.5f, -0.5f, -0.5f,	// 1
+						  0.5f,  0.5f, -0.5f,	// 2
+						  0.5f,  0.5f,  0.5f,	// 6
+
+						  0.5f,  0.5f,  0.5f,	// 6
+						  0.5f, -0.5f,  0.5f,	// 5
+						  0.5f, -0.5f, -0.5f,	// 1
+						  /*--------------------------------------------------------------------*/
+
+							  -0.5f, -0.5f, -0.5f,	// 0
+							   0.5f, -0.5f, -0.5f,	// 1
+							   0.5f, -0.5f,  0.5f,	// 5
+
+							   0.5f, -0.5f,  0.5f,  	// 5
+							  -0.5f, -0.5f,  0.5f,  	// 4
+							  -0.5f, -0.5f, -0.5f, 	// 0
+							  /*--------------------------------------------------------------------*/
+
+								   0.5f,  0.5f,  0.5f,  	// 6
+								   0.5f,  0.5f, -0.5f,	// 2
+								  -0.5f,  0.5f, -0.5f,	// 3	
+
+								  -0.5f,  0.5f, -0.5f,	// 3
+								  -0.5f,  0.5f,  0.5f,	// 7
+								   0.5f,  0.5f,  0.5f		// 6
+								   /*--------------------------------------------------------------------*/
+	};
 
 	// VAO и VBO для куба-источника света
 	unsigned int lightCubeVAO, lightCubeVBO;
@@ -552,21 +263,19 @@ int main()
 
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
-	Shader normalShader("../midnight/normalShader.vs", "../midnight/normalShader.fs", "../midnight/normalShader.gs");
 
 	unsigned int brickWall = loadTexture("../res/brickwall.png");
 	unsigned int BrickWallNormal = loadTexture("../res/brickwall_normal.png");
+	unsigned int BrickWallDepth = loadTexture("../res/brickwall_depth.png");
 
 
-	glm::vec3 pointLightPosition = glm::vec3(0.0f);
+	glm::vec3 pointLightPosition = glm::vec3(3.0f, 0.0f, 3.0f);
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
 	float lastTime = glfwGetTime(); // Переменная хранящая время начала работы программы
 	int nbFrames = 0;
-
-
 
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
@@ -594,18 +303,15 @@ int main()
 		// Обработка ввода
 		processInput(window);
 
-
-		glEnable(GL_MULTISAMPLE);
 		//glEnable(GL_FRAMEBUFFER_SRGB); // автоматическая гамма коррекция
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
 
 
 
 		// Проход основной
 		{
 			glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 
 			glCullFace(GL_BACK);	// отсечение задних граней
 			glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
@@ -628,10 +334,8 @@ int main()
 
 				ourShader.setVec3("lightPos", pointLightPosition);
 				ourShader.setVec3("viewPos", camera.Position);
-
+				ourShader.setFloat("height_scale", 0.1f);
 			}
-
-
 
 			// Рендеринг объекта
 			{
@@ -646,45 +350,14 @@ int main()
 				glActiveTexture(GL_TEXTURE1);
 				glBindTexture(GL_TEXTURE_2D, BrickWallNormal);
 
+				ourShader.setInt("texture_depth1", 2);
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, BrickWallDepth);
+
 				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				// Рендеринг линий нормали
-				normalShader.use();
-				normalShader.setMat4("projection", projection);
-				normalShader.setMat4("view", view);
-				normalShader.setMat4("model", modelOfPlane);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-				
-				
+				glDrawArrays(GL_TRIANGLES, 0, 6);			
 
 			}
-
-			// Рендеринг куба с нормалями
-			{
-				ourShader.use();
-				ourShader.setMat4("model", modelOfCube);
-
-				ourShader.setInt("texture_diffuse1", 0);
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, brickWall);
-
-				ourShader.setInt("texture_normal1", 1);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, BrickWallNormal);
-
-				glBindVertexArray(cubeVAO);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-
-				// Рендеринг линий нормали
-				normalShader.use();
-				normalShader.setMat4("projection", projection);
-				normalShader.setMat4("view", view);
-				normalShader.setMat4("model", modelOfCube);
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-
 
 			// Рендеринг куба источника света
 			{
@@ -699,21 +372,11 @@ int main()
 				lightCubeShader.setMat4("projection", projection);
 				lightCubeShader.setMat4("view", view);
 
-
-
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			
-
-
-
-
 		}
-
-
-
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
@@ -740,26 +403,10 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
-		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
-		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-	{
-		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-	{
-		modelOfCube = glm::rotate(modelOfCube, glm::radians(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		camera.ProcessKeyboard(UP, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		camera.ProcessKeyboard(DOWN, deltaTime);
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция
