@@ -4,97 +4,65 @@ out vec4 FragColor;
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoords;
-    vec3 TangentLightPos;
-    vec3 TangentViewPos;
-    vec3 TangentFragPos;
+    vec3 Normal;
 } fs_in;
 
+struct PointLight {    
+    vec3 position;
+    
+    float constant;
+    float linear;
+    float quadratic;  
+ 
+    vec3 color;
+    float volume;
+};  
+
 uniform sampler2D texture_diffuse1;
-uniform sampler2D texture_normal1;
-uniform sampler2D texture_depth1;
-
-uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform float height_scale;
 
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir);
+#define NR_POINT_LIGHTS 3  
+uniform PointLight pointLights[NR_POINT_LIGHTS];
+
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
 void main()
 {           
-
-    
-    vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);
-    vec2 texCoords = ParallaxMapping(fs_in.TexCoords,  viewDir);
-    if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-    {   
-        discard;
-    }
-    
-
-    vec3 normal = texture(texture_normal1, texCoords).rgb;
-	
-
-    normal = normalize(normal * 2.0 - 1.0);
-   
-
-    vec3 color = texture(texture_diffuse1, texCoords).rgb;
-	
+    vec3 norm = normalize(fs_in.Normal);
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
  
-    vec3 ambient = 0.1 * color;
-	
+    vec3 result = vec3(0.0, 0.0, 0.0);
 
-    vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
-    float diff = max(dot(lightDir, normal), 0.0);
-    vec3 diffuse = diff * color;
-	
+    for(int i = 0; i < NR_POINT_LIGHTS; i++)
+        result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir); 
+    
+    FragColor = vec4(result, 1.0);
 
+}
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
+    vec3 lightDir = normalize(light.position - fragPos);
+ 
+    
+    float diff = max(dot(normal, lightDir), 0.0);
+ 
     
     vec3 reflectDir = reflect(-lightDir, normal);
-    vec3 halfwayDir = normalize(lightDir + viewDir);  
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
-
-    vec3 specular = vec3(0.2) * spec;
-    FragColor = vec4(ambient + diffuse + specular, 1.0);
-}
-
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
-{ 
-    const float minLayers = 8.0;
-    const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));
-
-    float layerDepth = 1.0 / numLayers;
-
-    float currentLayerDepth = 0.0;
-
-    vec2 P = viewDir.xy * height_scale;
-    vec2 deltaTexCoords = P / numLayers;
-
-    vec2 currentTexCoords = texCoords;
-    float currentDepthMapValue = texture(texture_depth1, currentTexCoords).r;
-
-    while(currentLayerDepth < currentDepthMapValue)
-    {
-
-        currentTexCoords -= deltaTexCoords;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0f);
  
+    
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+     
+    vec3 ambient = vec3(texture(texture_diffuse1, fs_in.TexCoords));
+    vec3 diffuse = diff * vec3(texture(texture_diffuse1, fs_in.TexCoords));
+    vec3 specular = spec * vec3(0.1, 0.1, 0.1);
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
 
-        currentDepthMapValue = texture(texture_depth1, currentTexCoords).r;  
- 
+    vec3 colorOfLight = light.color * light.volume;
 
-        currentLayerDepth += layerDepth;  
-    }
-
-
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
- 
-
-    float afterDepth = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = texture(texture_depth1, prevTexCoords).r - currentLayerDepth + layerDepth;
- 
-
-    float weight = afterDepth / (afterDepth - beforeDepth);
-    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
- 
-    return finalTexCoords;
+    return ((ambient + diffuse + specular) * colorOfLight);
 } 
+
