@@ -28,7 +28,7 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 
 bool firstMouse = true;
-float exposure = 0.0001988f;
+float exposure = 0.1f;
 
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
@@ -219,33 +219,71 @@ int main()
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
 	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL);
+	Shader shaderBlur("../midnight/screenShader.vs", "../midnight/blurShader.fs", NULL);
 
 	unsigned int floorAndWall = loadTexture("../res/floor.png");
+	unsigned int box = loadTexture("../res/box.png");
+	stbi_set_flip_vertically_on_load(true);
+	unsigned int saha = loadTexture("../res/saha.png");
 
 	unsigned int fbo;
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	// Создание текстуры для прикрепляемого объекта цвета
-	unsigned int textureColorbuffer;
-	glGenTextures(1, &textureColorbuffer);
-	glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+	unsigned int textureColorbuffer1, textureColorbuffer2; // Первая текстура просто для сцены, а вторая для пересвета
+	glGenTextures(1, &textureColorbuffer1);
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer1);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer1, 0);
+
+	// создание второй текструы
+	glGenTextures(1, &textureColorbuffer2);
+	glBindTexture(GL_TEXTURE_2D, textureColorbuffer2);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, textureColorbuffer2, 0);
 
 	// Создание объекта рендербуфера дла прикрепляемых объектов глубины и трафарета (сэмплирование мы не будет здесь проводить)
 	unsigned int rbo;
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCR_WIDTH, SCR_HEIGHT); // использование одного объекта рендербуфера для буферов глубины и трафарета
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // теперь прикрепляем это дело
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT); // использование одного объекта рендербуфера для буферов глубины и трафарета
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo); // теперь прикрепляем это дело
+
+	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, attachments);
 
 	// Теперь, когда мы создали фреймбуфер и прикрепили все необходимые объекты, проверяем завершение формирования фреймбуфера
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+
+	// Создание пин-понг буферов
+	unsigned int pingpongFBO[2];
+	unsigned int pingpongBuffer[2];
+	glGenFramebuffers(2, pingpongFBO);
+	glGenTextures(2, pingpongBuffer);
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL
+		);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(
+			GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0
+		);
+	}
 
 	glm::vec3 pointLightPosition = glm::vec3(0.0f, 0.0f, -25.0f);
 	
@@ -257,21 +295,24 @@ int main()
 
 	std::vector<pointOfLight> pointsOfLight;
 
-	pointOfLight zero, one, two;
+	pointOfLight zero, one, two, three;
 
 	zero.position = glm::vec3(0.0f, 0.0f, -25.0f);
-	zero.color = glm::vec3(1.0f, 1.0f, 1.0f); // white
+	zero.color = glm::vec3(15.0f, 15.0f, 15.0f); // white
 
 	one.position = glm::vec3(0.0f, 0.0f, -15.0f);
-	one.color = glm::vec3(1.0f, 0.0f, 0.0f); // green
+	one.color = glm::vec3(10.0f, 0.0f, 0.0f); // red
 
 	two.position = glm::vec3(0.0f, 0.0f, -5.0f);
-	two.color = glm::vec3(0.0f, 0.0f, 1.0f);  // blue
+	two.color = glm::vec3(0.0f, 0.0f, 5.0f);  // blue
 
+	three.position = glm::vec3(2.0f, 0.0f, 1.0f);
+	three.color = glm::vec3(2.0f, 1.0f, 0.5f);  // orange
 
 	pointsOfLight.push_back(zero);
 	pointsOfLight.push_back(one);
 	pointsOfLight.push_back(two);
+	pointsOfLight.push_back(three);
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
@@ -282,6 +323,8 @@ int main()
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -302,12 +345,10 @@ int main()
 			lastFrame = currentFrame;
 		}
 
-	//	pointLightPosition.z = -10 + 10 * (float)sin(glfwGetTime());
-
 		// Обработка ввода
 		processInput(window);
 
-		//glEnable(GL_FRAMEBUFFER_SRGB); // автоматическая гамма коррекция
+	//	glEnable(GL_FRAMEBUFFER_SRGB); // автоматическая гамма коррекция
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 
@@ -319,12 +360,12 @@ int main()
 			glCullFace(GL_BACK);	// отсечение задних граней
 			glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 
-			glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 			//настройка основных матриц: вида и проекции
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 30.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 50.0f);
 			glm::mat4 view = camera.GetViewMatrix();
 			glm::mat4 model = glm::mat4(1.0f);
 
@@ -336,27 +377,18 @@ int main()
 				ourShader.setMat4("view", view);
 				ourShader.setVec3("viewPos", camera.Position);
 				
-				ourShader.setFloat("pointLights[0].volume", 100.0f); // white
 				ourShader.setVec3("pointLights[0].position", pointsOfLight[0].position);
-				ourShader.setFloat("pointLights[0].constant", 1.0f);
-				ourShader.setFloat("pointLights[0].linear", 0.09f);
-				ourShader.setFloat("pointLights[0].quadratic", 0.032f);
 				ourShader.setVec3("pointLights[0].color", pointsOfLight[0].color);
 
 				
-				ourShader.setFloat("pointLights[1].volume", 50.0f); // green
 				ourShader.setVec3("pointLights[1].position", pointsOfLight[1].position);
-				ourShader.setFloat("pointLights[1].constant", 1.0f);
-				ourShader.setFloat("pointLights[1].linear", 0.09f);
-				ourShader.setFloat("pointLights[1].quadratic", 0.032f);
 				ourShader.setVec3("pointLights[1].color", pointsOfLight[1].color);
 
-				ourShader.setFloat("pointLights[2].volume", 15.0f); // blue
 				ourShader.setVec3("pointLights[2].position", pointsOfLight[2].position);
-				ourShader.setFloat("pointLights[2].constant", 1.0f);
-				ourShader.setFloat("pointLights[2].linear", 0.09f);
-				ourShader.setFloat("pointLights[2].quadratic", 0.032f);
 				ourShader.setVec3("pointLights[2].color", pointsOfLight[2].color);
+
+				ourShader.setVec3("pointLights[3].position", pointsOfLight[3].position);
+				ourShader.setVec3("pointLights[3].color", pointsOfLight[3].color);
 
 			}
 
@@ -366,7 +398,7 @@ int main()
 				ourShader.use();
 				ourShader.setInt("texture_diffuse1", 0);
 				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, floorAndWall);
+				glBindTexture(GL_TEXTURE_2D, saha);
 
 				// конец тонеля
 				model = glm::mat4(1.0f);
@@ -374,6 +406,9 @@ int main()
 				ourShader.setMat4("model", model);
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);	
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, floorAndWall);
 
 				// правая стенка тунеля
 				model = glm::mat4(1.0f);
@@ -412,7 +447,29 @@ int main()
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 
+				// Пол
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(0.0f, -1.5f, 0.0f));
+				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+				model = glm::scale(model, glm::vec3(10.0f, 10.0f, 1.0f));
+				ourShader.setMat4("model", model);
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+
 			}
+
+			// Просто тестовая стенка
+			model = glm::mat4(1.0f);
+
+			model = glm::translate(model, glm::vec3(4.0f, 1.0f, -1.0f));
+			model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+			ourShader.setMat4("model", model);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, box);
+
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			// Рендеринг куба источника света 0
 			{
@@ -425,6 +482,9 @@ int main()
 				lightCubeShader.setMat4("model", model);
 				lightCubeShader.setMat4("projection", projection);
 				lightCubeShader.setMat4("view", view);
+				lightCubeShader.setVec3("color", zero.color);
+
+				glBindTexture(GL_TEXTURE_2D, 0);
 
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -441,7 +501,7 @@ int main()
 				lightCubeShader.setMat4("model", model);
 				lightCubeShader.setMat4("projection", projection);
 				lightCubeShader.setMat4("view", view);
-						
+				lightCubeShader.setVec3("color", one.color);
 
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -458,24 +518,68 @@ int main()
 				lightCubeShader.setMat4("model", model);
 				lightCubeShader.setMat4("projection", projection);
 				lightCubeShader.setMat4("view", view);
+				lightCubeShader.setVec3("color", two.color);
 
+				glBindVertexArray(lightCubeVAO);
+				glDrawArrays(GL_TRIANGLES, 0, 36);
+			}
+
+			// Рендеринг куба источника света 3
+			{
+				model = glm::mat4(1.0f);
+
+				model = glm::translate(model, three.position);
+				model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+
+				lightCubeShader.use();
+				lightCubeShader.setMat4("model", model);
+				lightCubeShader.setMat4("projection", projection);
+				lightCubeShader.setMat4("view", view);
+				lightCubeShader.setVec3("color", three.color);
 
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
 		}
+
+		bool horizontal = true, first_iteration = true;
+		int amount = 10;
+		shaderBlur.use();
+		for (unsigned int i = 0; i < amount; i++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+			shaderBlur.setInt("horizontal", horizontal);
+			glBindTexture(
+				GL_TEXTURE_2D, first_iteration ? textureColorbuffer2 : pingpongBuffer[!horizontal]
+			);
+			
+			shaderBlur.use();
+			shaderBlur.setInt("image", 0);
+
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			horizontal = !horizontal;
+			if (first_iteration)
+				first_iteration = false;
+		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
-		glClearColor(0.3f, 0.3f, 0.3f, 1.0f); // устанавливаем цвет заливки на "белый" (установите прозрачный цвет на белый (на самом деле это не обязательно, так как мы все равно не сможем видеть пространство за прямоугольником))
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // устанавливаем цвет заливки на "белый" (установите прозрачный цвет на белый (на самом деле это не обязательно, так как мы все равно не сможем видеть пространство за прямоугольником))
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		screenShader.use();
-		screenShader.setInt("screenTexture", 0);
+		screenShader.setInt("screenTexture", 1);
+		screenShader.setInt("bloomBlur", 0);
 		
 		screenShader.setFloat("exposure", exposure);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[0]);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textureColorbuffer1);
 		
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -512,14 +616,14 @@ void processInput(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		exposure = exposure + 0.00001f;
+		exposure = exposure + 0.001f;
 		std::cout << exposure << "\n";
 	}
 	
 
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		exposure = exposure - 0.00001f;
+		exposure = exposure - 0.001f;
 		std::cout << exposure << "\n";
 	}
 }

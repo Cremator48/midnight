@@ -1,5 +1,6 @@
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 in VS_OUT {
     vec3 FragPos;
@@ -9,19 +10,14 @@ in VS_OUT {
 
 struct PointLight {    
     vec3 position;
-    
-    float constant;
-    float linear;
-    float quadratic;  
  
     vec3 color;
-    float volume;
 };  
 
 uniform sampler2D texture_diffuse1;
 uniform vec3 viewPos;
 
-#define NR_POINT_LIGHTS 3  
+#define NR_POINT_LIGHTS 4  
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -38,6 +34,12 @@ void main()
     
     FragColor = vec4(result, 1.0);
 
+    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+        BrightColor = vec4(FragColor.rgb, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+
 }
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
@@ -45,24 +47,18 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
  
     
     float diff = max(dot(normal, lightDir), 0.0);
- 
-    
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0f);
- 
+  
     
     float distance = length(light.position - fragPos);
-    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+    float attenuation = 1.0 / (distance * distance);    
      
     vec3 ambient = vec3(texture(texture_diffuse1, fs_in.TexCoords));
     vec3 diffuse = diff * vec3(texture(texture_diffuse1, fs_in.TexCoords));
-    vec3 specular = spec * vec3(0.1, 0.1, 0.1);
+ 
+
     ambient *= attenuation;
     diffuse *= attenuation;
-    specular *= attenuation;
 
-    vec3 colorOfLight = light.color * light.volume;
-
-    return ((ambient + diffuse + specular) * colorOfLight);
+    return ((ambient  * light.color + diffuse  * light.color));
 } 
 
