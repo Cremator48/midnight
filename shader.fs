@@ -20,10 +20,11 @@ void main()
     
     gNormal = normalize(fs_in.Normal);
  
+    gAlbedoSpec.rgb = vec3(0.95);
     
-    gAlbedoSpec.rgb = texture(texture_diffuse1, fs_in.TexCoords).rgb;
+//    gAlbedoSpec.rgb = texture(texture_diffuse1, fs_in.TexCoords).rgb;
  
     
-    gAlbedoSpec.a = texture(texture_specular1, fs_in.TexCoords).r;
+//    gAlbedoSpec.a = texture(texture_specular1, fs_in.TexCoords).r;
 
 }
