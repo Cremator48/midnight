@@ -14,12 +14,14 @@
 #include "../mesh.h"
 
 #include "camera.h"
+#include <random>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(char const* path);
+float lerp(float a, float b, float f);
 
 
 // Константы
@@ -35,6 +37,8 @@ float exposure = 0.1f;
 
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
+
+float modelHigh = 1.0f;
 
 int main()
 {
@@ -93,16 +97,16 @@ int main()
 
 	// Вектор нормали
 	glm::vec3 nm(0.0f, 0.0f, 1.0f);
-	
+
 
 	float quadVertices[] = {
 		// координаты           // нормали        // текст. координаты
 		pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y,
-		pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, 
+		pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y,
 		pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y,
 
-		pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, 
-		pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, 
+		pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y,
+		pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y,
 		pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y
 	};
 
@@ -292,7 +296,7 @@ int main()
 		glBindVertexArray(cubeVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions)+sizeof(cubeVerticesNormals), NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals), NULL, GL_STATIC_DRAW);
 
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
 		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), sizeof(cubeVerticesNormals), &cubeVerticesNormals);
@@ -312,11 +316,14 @@ int main()
 	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
 	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL);
+	Shader shaderSSAO("../midnight/screenShader.vs", "../midnight/shaderSSAO.fs", NULL);
 
 	unsigned int floorAndWall = loadTexture("../res/floor.png");
 	unsigned int box = loadTexture("../res/box.png");
-	stbi_set_flip_vertically_on_load(true);
+	//	stbi_set_flip_vertically_on_load(true);
 	unsigned int saha = loadTexture("../res/saha.png");
+
+	Model backpack("C:/Users/tyuri/Documents/GitHub/res/models/backpack/backpack.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
 	// Настройка фреймбуфера для отложенного рендеринга
 	unsigned int gBuffer, gPosition, gNormal, gColorSpec;
@@ -330,6 +337,8 @@ int main()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
 
 		// Цветовой буфер нормалей
@@ -364,7 +373,23 @@ int main()
 			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
-	
+
+	// ssao фреймбуфер
+	unsigned int ssaoFBO, ssaoColorBuffer;
+	{
+		glGenFramebuffers(1, &ssaoFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+
+
+		glGenTextures(1, &ssaoColorBuffer);
+		glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SCR_WIDTH, SCR_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+	}
+
 
 	// Освещение
 	glm::vec3 lightPos[3], lightColor[3];
@@ -377,7 +402,7 @@ int main()
 		lightColor[1] = glm::vec3(0.0f, 0.7f, 0.0f);
 		lightColor[2] = glm::vec3(0.0f, 0.0f, 0.7f);
 	}
-	
+
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
@@ -388,6 +413,50 @@ int main()
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // случайное значение типа float из диапазона [0.0, 1.0]
+	std::default_random_engine generator;
+	std::vector<glm::vec3> ssaoKernel;
+	for (unsigned int i = 0; i < 64; ++i)
+	{
+		glm::vec3 sample(
+			randomFloats(generator) * 2.0 - 1.0,
+			randomFloats(generator) * 2.0 - 1.0,
+			randomFloats(generator)
+		);
+		sample = glm::normalize(sample);
+		sample *= randomFloats(generator);
+
+		float scale = (float)i / 64.0;
+		scale = lerp(0.1f, 1.0f, scale * scale);
+		sample *= scale;
+		ssaoKernel.push_back(sample);
+	}
+
+	std::vector<glm::vec3> ssaoNoise;
+	for (unsigned int i = 0; i < 16; i++)
+	{
+		glm::vec3 noise(
+			randomFloats(generator) * 2.0 - 1.0,
+			randomFloats(generator) * 2.0 - 1.0,
+			0.0f);
+		ssaoNoise.push_back(noise);
+	}
+
+	unsigned int noiseTexture;
+	glGenTextures(1, &noiseTexture);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+
+	shaderSSAO.use();
+	shaderSSAO.setInt("gPosition", 0);
+	shaderSSAO.setInt("gNormal", 1);
+	shaderSSAO.setInt("texNoise", 2);
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -435,7 +504,6 @@ int main()
 				ourShader.use();
 				ourShader.setMat4("projection", projection);
 				ourShader.setMat4("view", view);
-
 				ourShader.setInt("texture_diffuse1", 0);
 			}
 
@@ -518,15 +586,50 @@ int main()
 					model = glm::mat4(1.0f);
 					glm::vec3 cubePose = glm::vec3(lightPos[0].x, lightPos[0].y - 1.0f, lightPos[0].z);
 					model = glm::translate(model, cubePose);
-					
+
 					ourShader.setMat4("model", model);
 
 					glBindVertexArray(cubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 
+				// Отрисовка рюкзака
+				{
+					model = glm::mat4(1.0f);
+					model = glm::translate(model, glm::vec3(5.0f, modelHigh, -5.0f));
+					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+					ourShader.setMat4("model", model);
+					backpack.Draw(ourShader);
+				}
 			}
 
+		}
+
+		// Рендеринг ssao
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, gPosition);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, gNormal);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, noiseTexture);
+			shaderSSAO.use();
+
+
+			//	SendKernelSamplesToShader();
+			for (int i = 0; i < 64; ++i)
+			{
+				shaderSSAO.setVec3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
+			}
+
+
+
+			shaderSSAO.setMat4("projection", projection);
+			//	RenderQuad();
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
 		// Рендеринг экранного прямоугольника
@@ -535,12 +638,13 @@ int main()
 			glEnable(GL_DEPTH_TEST);
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
+
 
 			screenShader.use();
 			screenShader.setInt("gPosition", 0);
 			screenShader.setInt("gNormal", 1);
 			screenShader.setInt("gColorSpec", 2);
+			screenShader.setInt("ssao", 3);
 			screenShader.setVec3("viewPos", camera.Position);
 
 			glActiveTexture(GL_TEXTURE0);
@@ -549,10 +653,12 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, gNormal);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, gColorSpec);
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
 
 			// переменные освещения
 			{
-				
+
 
 				screenShader.setVec3("lights[0].Position", lightPos[0]);
 				screenShader.setVec3("lights[1].Position", lightPos[1]);
@@ -564,7 +670,7 @@ int main()
 				screenShader.setVec3("lights[1].Color", lightColor[1]);
 				screenShader.setVec3("lights[2].Color", lightColor[2]);
 			}
-			
+
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -579,21 +685,21 @@ int main()
 				lightCubeShader.setMat4("projection", projection);
 				lightCubeShader.setMat4("view", view);
 
-				for (unsigned int i = 0; i < sizeof(lightPos)/sizeof(lightPos[0]); i++)
+				for (unsigned int i = 0; i < sizeof(lightPos) / sizeof(lightPos[0]); i++)
 				{
 					model = glm::mat4(1.0f);
 					model = glm::translate(model, lightPos[i]);
 					model = glm::scale(model, glm::vec3(0.25f));
 					lightCubeShader.setMat4("model", model);
 					lightCubeShader.setVec3("color", lightColor[i]);
-					
+
 					glBindVertexArray(lightCubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);;
 				}
 			}
 		}
-	
-		
+
+
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
@@ -627,15 +733,15 @@ void processInput(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		exposure = exposure + 0.001f;
-		std::cout << exposure << "\n";
+		modelHigh = modelHigh + 0.01f;
+		std::cout << modelHigh << "\n";
 	}
-	
+
 
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		exposure = exposure - 0.001f;
-		std::cout << exposure << "\n";
+		modelHigh = modelHigh - 0.01f;
+		std::cout << modelHigh << "\n";
 	}
 }
 
@@ -710,4 +816,9 @@ unsigned int loadTexture(char const* path)
 	}
 
 	return textureID;
+}
+
+float lerp(float a, float b, float f)
+{
+	return a + f * (b - a);
 }
