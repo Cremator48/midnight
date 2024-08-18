@@ -11,11 +11,12 @@ uniform sampler2D ssao;
 struct Light {
     vec3 Position;
     vec3 Color;
+
+    float Linear;
+    float Quadratic;
 };
 
-const int NR_LIGHTS = 3;
-uniform Light lights[NR_LIGHTS];
-uniform vec3 viewPos;
+uniform Light lights;
 
 void main()
 {   
@@ -24,17 +25,20 @@ void main()
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Color = texture(gColorSpec, TexCoords).rgb;
     float AmbientOcclusion = texture(ssao, TexCoords).r;
-
     
-    
-    vec3 ambient = vec3(0.3 * Color * AmbientOcclusion);
+    vec3 ambient = vec3(0.1 * Color * AmbientOcclusion);
     vec3 lighting = ambient;
-    vec3 viewDir = normalize(-FragPos);
-    for(int i = 0; i < NR_LIGHTS; ++i)
-    {
-        vec3 lightDir = normalize(lights[i].Position - FragPos);
-        vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Color * lights[i].Color;
-        lighting += diffuse;
-    }
+   
+    vec3 lightDir = normalize(lights.Position - FragPos);
+    vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Color * lights.Color;
+
+    float distance = length(lights.Position - FragPos);
+    float attenuation = 1.0 / (1.0 + lights.Linear * distance + lights.Quadratic * distance * distance);
+    diffuse *= attenuation;
+
+
+    lighting += diffuse;
+
     FragColor = vec4(lighting, 1.0);
+//      FragColor = vec4(FragPos, 1.0);
 }

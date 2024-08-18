@@ -313,17 +313,12 @@ int main()
 	}
 
 
-	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);
+	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);  // Шейдер для геометрического прохода
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
 	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL);
 	Shader shaderSSAO("../midnight/screenShader.vs", "../midnight/shaderSSAO.fs", NULL);
 
-	unsigned int floorAndWall = loadTexture("../res/floor.png");
-	unsigned int box = loadTexture("../res/box.png");
-	//	stbi_set_flip_vertically_on_load(true);
-	unsigned int saha = loadTexture("../res/saha.png");
-
-	Model backpack("C:/Users/tyuri/Documents/GitHub/res/models/backpack/backpack.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	Model backpack("C:/Users/Tyurin/Documents/GitHub/res/models/backpack/backpack.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 
 	// Настройка фреймбуфера для отложенного рендеринга
 	unsigned int gBuffer, gPosition, gNormal, gColorSpec;
@@ -392,15 +387,11 @@ int main()
 
 
 	// Освещение
-	glm::vec3 lightPos[3], lightColor[3];
+	glm::vec3 lightPos, lightColor;
 	{
-		lightPos[0] = glm::vec3(5.0f, 1.0f, 1.0f);
-		lightPos[1] = glm::vec3(3.0f, 1.0f, -13.0f);
-		lightPos[2] = glm::vec3(-5.0f, 1.0f, 2.0f);
+		lightPos = glm::vec3(5.0f, 1.0f, 1.0f);
 
-		lightColor[0] = glm::vec3(0.7f, 0.0f, 0.0f);
-		lightColor[1] = glm::vec3(0.0f, 0.7f, 0.0f);
-		lightColor[2] = glm::vec3(0.0f, 0.0f, 0.7f);
+		lightColor = glm::vec3(1.0f);
 	}
 
 
@@ -480,6 +471,9 @@ int main()
 		// Обработка ввода
 		processInput(window);
 
+		lightPos.x = 10 * sin(glfwGetTime());
+		lightPos.z = 10 * cos(glfwGetTime());
+
 		//	glEnable(GL_FRAMEBUFFER_SRGB); // автоматическая гамма коррекция
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
@@ -504,60 +498,10 @@ int main()
 				ourShader.use();
 				ourShader.setMat4("projection", projection);
 				ourShader.setMat4("view", view);
-				ourShader.setInt("texture_diffuse1", 0);
 			}
 
-			// Рендеринг объекта
+			// Рендеринг объектов
 			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, saha);
-
-				// конец тонеля
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(0.0f, 0.0f, -26.0f));
-				ourShader.setMat4("model", model);
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, floorAndWall);
-
-				// правая стенка тунеля
-				model = glm::mat4(1.0f);
-
-				model = glm::translate(model, glm::vec3(1.0f, 0.0f, -14.0f));
-				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-				model = glm::scale(model, glm::vec3(12.0f, 1.0f, 1.0f));
-				ourShader.setMat4("model", model);
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				// левая стенка тунеля
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -14.0f));
-				model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-				model = glm::scale(model, glm::vec3(12.0f, 1.0f, 1.0f));
-				ourShader.setMat4("model", model);
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				// верхняя стенка тунеля
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(0.0f, 1.0f, -14.0f));
-				model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				model = glm::scale(model, glm::vec3(1.0f, 12.0f, 1.0f));
-				ourShader.setMat4("model", model);
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				// нижняя стенка тунеля
-				model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(0.0f, -1.0f, -14.0f));
-				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-				model = glm::scale(model, glm::vec3(1.0f, 12.0f, 1.0f));
-				ourShader.setMat4("model", model);
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
 
 				// Пол
 				model = glm::mat4(1.0f);
@@ -568,30 +512,6 @@ int main()
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 
-				// Просто тестовая стенка
-				model = glm::mat4(1.0f);
-
-				model = glm::translate(model, glm::vec3(4.0f, 1.0f, -1.0f));
-				model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-				ourShader.setMat4("model", model);
-
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, box);
-
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-
-				// Отрисовка куба для затенения
-				{
-					model = glm::mat4(1.0f);
-					glm::vec3 cubePose = glm::vec3(lightPos[0].x, lightPos[0].y - 1.0f, lightPos[0].z);
-					model = glm::translate(model, cubePose);
-
-					ourShader.setMat4("model", model);
-
-					glBindVertexArray(cubeVAO);
-					glDrawArrays(GL_TRIANGLES, 0, 36);
-				}
 
 				// Отрисовка рюкзака
 				{
@@ -617,17 +537,12 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, noiseTexture);
 			shaderSSAO.use();
 
-
-			//	SendKernelSamplesToShader();
 			for (int i = 0; i < 64; ++i)
 			{
 				shaderSSAO.setVec3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
 			}
 
-
-
 			shaderSSAO.setMat4("projection", projection);
-			//	RenderQuad();
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
@@ -645,7 +560,6 @@ int main()
 			screenShader.setInt("gNormal", 1);
 			screenShader.setInt("gColorSpec", 2);
 			screenShader.setInt("ssao", 3);
-			screenShader.setVec3("viewPos", camera.Position);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -658,17 +572,14 @@ int main()
 
 			// переменные освещения
 			{
+				screenShader.setVec3("lights.Position", lightPos);
+				screenShader.setVec3("lights.Color", lightColor);
 
+				const float linear = 0.09;
+				const float quadratic = 0.032;
 
-				screenShader.setVec3("lights[0].Position", lightPos[0]);
-				screenShader.setVec3("lights[1].Position", lightPos[1]);
-				screenShader.setVec3("lights[2].Position", lightPos[2]);
-
-
-
-				screenShader.setVec3("lights[0].Color", lightColor[0]);
-				screenShader.setVec3("lights[1].Color", lightColor[1]);
-				screenShader.setVec3("lights[2].Color", lightColor[2]);
+				screenShader.setFloat("lights.Linear", linear);
+				screenShader.setFloat("lights.Quadratic", quadratic);
 			}
 
 			glBindVertexArray(VAO);
@@ -685,17 +596,14 @@ int main()
 				lightCubeShader.setMat4("projection", projection);
 				lightCubeShader.setMat4("view", view);
 
-				for (unsigned int i = 0; i < sizeof(lightPos) / sizeof(lightPos[0]); i++)
-				{
 					model = glm::mat4(1.0f);
-					model = glm::translate(model, lightPos[i]);
+					model = glm::translate(model, lightPos);
 					model = glm::scale(model, glm::vec3(0.25f));
 					lightCubeShader.setMat4("model", model);
-					lightCubeShader.setVec3("color", lightColor[i]);
+					lightCubeShader.setVec3("color", lightColor);
 
 					glBindVertexArray(lightCubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);;
-				}
 			}
 		}
 

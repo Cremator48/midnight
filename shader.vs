@@ -25,7 +25,5 @@ void main()
 
     vs_out.Normal = normalMatrix * aNormal;
 
-    
-
     gl_Position = projection * viewPos;
 }
