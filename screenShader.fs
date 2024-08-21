@@ -24,9 +24,9 @@ void main()
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 Color = texture(gColorSpec, TexCoords).rgb;
-    float AmbientOcclusion = texture(ssao, TexCoords).r;
+    float ssaoTexture = texture(ssao, TexCoords).r;
     
-    vec3 ambient = vec3(0.1 * Color * AmbientOcclusion);
+    vec3 ambient = vec3(0.1 * Color * ssaoTexture);
     vec3 lighting = ambient;
    
     vec3 lightDir = normalize(lights.Position - FragPos);
@@ -40,5 +40,7 @@ void main()
     lighting += diffuse;
 
     FragColor = vec4(lighting, 1.0);
-//      FragColor = vec4(FragPos, 1.0);
+
+  //  FragColor = vec4(ssaoTexture, ssaoTexture, ssaoTexture, 1.0);
+    
 }

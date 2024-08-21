@@ -33,17 +33,16 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 
 bool firstMouse = true;
-float exposure = 0.1f;
 
 float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
 float modelHigh = 1.0f;
+int power = 1;
 
 int main()
 {
 	setlocale(LC_ALL, "Russian");
-	std::cout << "Naked program!\n";
 
 	// glfw: инициализация и конфигурирование
 	{
@@ -52,10 +51,6 @@ int main()
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	}
-
-	// Включаем мультисэмплинг
-	glfwWindowHint(GLFW_SAMPLES, 4);
-
 
 	// glfw: создание окна
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL", NULL, NULL);
@@ -82,7 +77,6 @@ int main()
 		return -1;
 	}
 
-
 	// Координаты
 	glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
 	glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
@@ -98,7 +92,6 @@ int main()
 	// Вектор нормали
 	glm::vec3 nm(0.0f, 0.0f, 1.0f);
 
-
 	float quadVertices[] = {
 		// координаты           // нормали        // текст. координаты
 		pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y,
@@ -109,8 +102,7 @@ int main()
 		pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y,
 		pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y
 	};
-
-
+	
 	// VAO и VBO для прямоугольника-объекта
 	unsigned int VAO, VBO;
 	{
@@ -200,72 +192,6 @@ int main()
 								   /*--------------------------------------------------------------------*/
 	};
 
-	// Нормали куба
-	float cubeVerticesNormals[] =
-	{
-		/*--------------------------------------------------------------------*/
-			// Дальняя грань (против часовой)
-			 0.0f,  0.0f, -1.0f,	// 2	
-			 0.0f,  0.0f, -1.0f,	// 1
-			 0.0f,  0.0f, -1.0f,	// 0
-
-			 0.0f,  0.0f, -1.0f,	// 0
-			 0.0f,  0.0f, -1.0f,	// 3
-			 0.0f,  0.0f, -1.0f,	// 2
-
-			 /*--------------------------------------------------------------------*/
-				 // Ближняя грань (против часовой)
-				  0.0f,  0.0f, 1.0f,		// 4	
-				  0.0f,  0.0f, 1.0f,		// 5
-				  0.0f,  0.0f, 1.0f,		// 6
-
-				  0.0f,  0.0f, 1.0f,		// 6
-				  0.0f,  0.0f, 1.0f,		// 7
-				  0.0f,  0.0f, 1.0f,		// 4
-
-				  /*--------------------------------------------------------------------*/
-					  // Левая грань (против часовой)
-					   -1.0f,  0.0f,  0.0f,	// 7	
-					   -1.0f,  0.0f,  0.0f,	// 3
-					   -1.0f,  0.0f,  0.0f,	// 0
-
-					   -1.0f,  0.0f,  0.0f,	// 0
-					   -1.0f,  0.0f,  0.0f,	// 4
-					   -1.0f,  0.0f,  0.0f,	// 7
-
-					   /*--------------------------------------------------------------------*/
-						   // Правая грань (против часовой)
-							1.0f,  0.0f,  0.0f,	// 1	
-							1.0f,  0.0f,  0.0f,	// 2
-							1.0f,  0.0f,  0.0f,	// 6	
-
-							1.0f,  0.0f,  0.0f,	// 6
-							1.0f,  0.0f,  0.0f,	// 5
-							1.0f,  0.0f,  0.0f,	// 1
-
-							/*--------------------------------------------------------------------*/
-								// Нижняя грань (против часовой)
-								 0.0f, -1.0f,  0.0f, 	// 0	
-								 0.0f, -1.0f,  0.0f,	// 1
-								 0.0f, -1.0f,  0.0f,	// 5
-
-								 0.0f, -1.0f,  0.0f,	// 5
-								 0.0f, -1.0f,  0.0f,	// 4
-								 0.0f, -1.0f,  0.0f,	// 0
-
-								 /*--------------------------------------------------------------------*/
-									 // Верхняя грань (против часовой)
-									  0.0f,  1.0f,  0.0f,	// 6	
-									  0.0f,  1.0f,  0.0f,	// 2
-									  0.0f,  1.0f,  0.0f,	// 3	
-
-									  0.0f,  1.0f,  0.0f,	// 3
-									  0.0f,  1.0f,  0.0f,	// 7
-									  0.0f,  1.0f,  0.0f	// 6
-
-									  /*--------------------------------------------------------------------*/
-	};
-
 	// VAO и VBO для куба-источника света
 	unsigned int lightCubeVAO, lightCubeVBO;
 	{
@@ -287,38 +213,18 @@ int main()
 		glBindVertexArray(0);
 	}
 
-	// VAO для затеняемого куба
-	unsigned int cubeVAO, cubeVBO;
-	{
-		glGenVertexArrays(1, &cubeVAO);
-		glGenBuffers(1, &cubeVBO);
+	Shader geometricShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);  // Шейдер для геометрического прохода
+	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL); // Шейдер для отрисовки кубов-источников света
+	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL); // Шейдер для отображения прямоугольника поверх экрана
+	Shader shaderSSAO("../midnight/screenShader.vs", "../midnight/shaderSSAO.fs", NULL); // Шейдер для генерации ssao текстуры
 
-		glBindVertexArray(cubeVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	unsigned int floor = loadTexture("C:\\Users\\Tyurin\\Documents\\GitHub\\res\\floor.png");
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions) + sizeof(cubeVerticesNormals), NULL, GL_STATIC_DRAW);
-
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(cubeVerticesPositions), &cubeVerticesPositions);
-		glBufferSubData(GL_ARRAY_BUFFER, sizeof(cubeVerticesPositions), sizeof(cubeVerticesNormals), &cubeVerticesNormals);
-
-		// Координатный атрибут
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-		glEnableVertexAttribArray(0);
-
-		// Атрибуты нормалей
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(sizeof(cubeVerticesPositions)));
-		glEnableVertexAttribArray(1);
-
-		glBindVertexArray(0);
-	}
-
-
-	Shader ourShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);  // Шейдер для геометрического прохода
-	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL);
-	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL);
-	Shader shaderSSAO("../midnight/screenShader.vs", "../midnight/shaderSSAO.fs", NULL);
-
+	stbi_set_flip_vertically_on_load(true);
 	Model backpack("C:/Users/Tyurin/Documents/GitHub/res/models/backpack/backpack.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	
+
+	
 
 	// Настройка фреймбуфера для отложенного рендеринга
 	unsigned int gBuffer, gPosition, gNormal, gColorSpec;
@@ -385,22 +291,18 @@ int main()
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
 	}
 
-
 	// Освещение
 	glm::vec3 lightPos, lightColor;
 	{
 		lightPos = glm::vec3(5.0f, 1.0f, 1.0f);
-
 		lightColor = glm::vec3(1.0f);
 	}
-
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
 	float lastTime = glfwGetTime(); // Переменная хранящая время начала работы программы
 	int nbFrames = 0;
-
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -435,15 +337,16 @@ int main()
 	}
 
 	unsigned int noiseTexture;
-	glGenTextures(1, &noiseTexture);
-	glBindTexture(GL_TEXTURE_2D, noiseTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-
+	{
+		glGenTextures(1, &noiseTexture);
+		glBindTexture(GL_TEXTURE_2D, noiseTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	}
+	
 	shaderSSAO.use();
 	shaderSSAO.setInt("gPosition", 0);
 	shaderSSAO.setInt("gNormal", 1);
@@ -495,9 +398,9 @@ int main()
 
 			//Передача основных матриц и позиции камеры шейдеру
 			{
-				ourShader.use();
-				ourShader.setMat4("projection", projection);
-				ourShader.setMat4("view", view);
+				geometricShader.use();
+				geometricShader.setMat4("projection", projection);
+				geometricShader.setMat4("view", view);
 			}
 
 			// Рендеринг объектов
@@ -508,7 +411,9 @@ int main()
 				model = glm::translate(model, glm::vec3(0.0f, -1.5f, 0.0f));
 				model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 				model = glm::scale(model, glm::vec3(10.0f, 10.0f, 1.0f));
-				ourShader.setMat4("model", model);
+				geometricShader.setMat4("model", model);
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, floor);
 				glBindVertexArray(VAO);
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -518,8 +423,8 @@ int main()
 					model = glm::mat4(1.0f);
 					model = glm::translate(model, glm::vec3(5.0f, modelHigh, -5.0f));
 					model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-					ourShader.setMat4("model", model);
-					backpack.Draw(ourShader);
+					geometricShader.setMat4("model", model);
+					backpack.Draw(geometricShader);
 				}
 			}
 
@@ -536,8 +441,9 @@ int main()
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, noiseTexture);
 			shaderSSAO.use();
+			shaderSSAO.setInt("power", power);
 
-			for (int i = 0; i < 64; ++i)
+			for (int i = 0; i < 32; ++i)
 			{
 				shaderSSAO.setVec3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
 			}
@@ -570,13 +476,17 @@ int main()
 			glActiveTexture(GL_TEXTURE3);
 			glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
 
+
 			// переменные освещения
 			{
-				screenShader.setVec3("lights.Position", lightPos);
+				glm::vec3 lightPosView = glm::vec3(view*glm::vec4(lightPos, 1.0));
+				screenShader.setVec3("lights.Position", lightPosView);
 				screenShader.setVec3("lights.Color", lightColor);
 
-				const float linear = 0.09;
-				const float quadratic = 0.032;
+
+
+				const float linear = 0.022;
+				const float quadratic = 0.0019;
 
 				screenShader.setFloat("lights.Linear", linear);
 				screenShader.setFloat("lights.Quadratic", quadratic);
@@ -640,17 +550,15 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	{
 		modelHigh = modelHigh + 0.01f;
-		std::cout << modelHigh << "\n";
-	}
-
-
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	{
 		modelHigh = modelHigh - 0.01f;
-		std::cout << modelHigh << "\n";
-	}
+
+	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+		power = power - 1;
+	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+		power = power + 1;
+
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция

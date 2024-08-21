@@ -13,17 +13,30 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
+/*
+void main()
+{
+    vec4 worldPos = model * vec4(aPos, 1.0);
+    vs_out.FragPos = worldPos.xyz; 
+    vs_out.TexCoords = aTexCoords;
+    
+    mat3 normalMatrix = transpose(inverse(mat3(model)));
+    vs_out.Normal = normalMatrix * aNormal;
+
+    gl_Position = projection * view * worldPos;
+}
+*/
+
 
 void main()
 {
     vec4 viewPos = view * model * vec4(aPos, 1.0);
-
-    vs_out.FragPos = viewPos.xyz;
+    vs_out.FragPos = viewPos.xyz; 
     vs_out.TexCoords = aTexCoords;
     
     mat3 normalMatrix = transpose(inverse(mat3(view * model)));
-
     vs_out.Normal = normalMatrix * aNormal;
-
+    
     gl_Position = projection * viewPos;
 }
+

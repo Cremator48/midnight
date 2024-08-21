@@ -9,6 +9,8 @@ in VS_OUT {
     vec3 Normal;
 } fs_in;
 
+uniform sampler2D texture_diffuse0;
+
 void main()
 {           
     
@@ -17,6 +19,5 @@ void main()
     
     gNormal = normalize(fs_in.Normal);
  
-    gAlbedoSpec.rgb = vec3(0.95);
-
+    gAlbedoSpec.rgb = texture(texture_diffuse0, fs_in.TexCoords).rgb;
 }

@@ -7,9 +7,11 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D texNoise;
  
-uniform vec3 samples[64];
+uniform vec3 samples[32];
 uniform mat4 projection;
- 
+
+uniform int power;
+
 const vec2 noiseScale = vec2(1600.0/4.0, 900.0/4.0);
 
 void main()
@@ -23,7 +25,7 @@ void main()
 	mat3 TBN = mat3(tangent, bitangent, normal); 
 
 	float occlusion = 0.0;
-	float kernelSize = 64;
+	float kernelSize = 32;
 	float radius = 0.5;
 
 	for(int i = 0; i < kernelSize; ++i)
@@ -45,7 +47,7 @@ void main()
    	}
 
 	occlusion = 1.0 - (occlusion / kernelSize);
-	FragColor = occlusion;
+	FragColor = pow(occlusion, power);
 
 
 }
