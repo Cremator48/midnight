@@ -38,7 +38,7 @@ float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
 float modelHigh = 1.0f;
-int power = 1;
+int power = 65;
 
 int main()
 {
@@ -215,8 +215,12 @@ int main()
 
 	Shader geometricShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);  // Шейдер для геометрического прохода
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL); // Шейдер для отрисовки кубов-источников света
-	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL); // Шейдер для отображения прямоугольника поверх экрана
 	Shader shaderSSAO("../midnight/screenShader.vs", "../midnight/shaderSSAO.fs", NULL); // Шейдер для генерации ssao текстуры
+	Shader resultSSAOShader("../midnight/screenShader.vs", "../midnight/ssaoResultShader.fs", NULL); // Шейдер для отрисовки результата ssao
+	Shader twiseScreenShader("../midnight/screenShader.vs", "../midnight/twiseScreenShader.fs", NULL); // Шейдер для совмещения ssao-экранной текстуры и источников освещения
+	Shader screenShader("../midnight/screenShader.vs", "../midnight/screenShader.fs", NULL); // Шейдер для совмещения ssao-экранной текстуры и источников освещения
+	Shader shaderBlur("../midnight/screenShader.vs", "../midnight/blur.fs", NULL); // Шейдер для размытия
+	
 
 	unsigned int floor = loadTexture("C:\\Users\\Tyurin\\Documents\\GitHub\\res\\floor.png");
 
@@ -291,11 +295,103 @@ int main()
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
 	}
 
+	// Настройка фреймбуфера хранящего текстуру экрана с эффектом ssao, и вторую текстуру хранящую объекты запредельной яркости
+	unsigned int ssaoFinalFBO, ssaoScreenTexture;
+	{
+		glGenFramebuffers(1, &ssaoFinalFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, ssaoFinalFBO);
+
+
+		glGenTextures(1, &ssaoScreenTexture);
+		glBindTexture(GL_TEXTURE_2D, ssaoScreenTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoScreenTexture, 0);
+
+		// Создание объекта рендербуфера дла прикрепляемых объектов глубины и трафарета (сэмплирование мы не будет здесь проводить)
+		unsigned int rbo;
+		glGenRenderbuffers(1, &rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT); // использование одного объекта рендербуфера для буферов глубины и трафарета
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo); // теперь прикрепляем это дело
+
+		// Теперь, когда мы создали фреймбуфер и прикрепили все необходимые объекты, проверяем завершение формирования фреймбуфера
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	// Настройка фреймбуфера для эффекта свечения
+	unsigned int forLightBuffer, usualScreenTexture, overLightScreenTexture;
+	{
+		glGenFramebuffers(1, &forLightBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, forLightBuffer);
+
+		// Первая текстура для размытия
+		glGenTextures(1, &usualScreenTexture);
+		glBindTexture(GL_TEXTURE_2D, usualScreenTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, usualScreenTexture, 0);
+
+		// Вторая текстура для размытия
+		glGenTextures(1, &overLightScreenTexture);
+		glBindTexture(GL_TEXTURE_2D, overLightScreenTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, overLightScreenTexture, 0);
+
+		// Создание объекта рендербуфера дла прикрепляемых объектов глубины и трафарета (сэмплирование мы не будет здесь проводить)
+		unsigned int rbo;
+		glGenRenderbuffers(1, &rbo);
+		glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT); // использование одного объекта рендербуфера для буферов глубины и трафарета
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo); // теперь прикрепляем это дело
+
+		// Сообщаем OpenGL, какой прикрепленный цветовой буфер (задействованного фреймбуфера) собираемся использовать для рендеринга
+		unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+		glDrawBuffers(2, attachments);
+
+		// Теперь, когда мы создали фреймбуфер и прикрепили все необходимые объекты, проверяем завершение формирования фреймбуфера
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	unsigned int pingpongFBO[2];
+	unsigned int pingpongBuffer[2];
+	{
+		glGenFramebuffers(2, pingpongFBO);
+		glGenTextures(2, pingpongBuffer);
+		for (unsigned int i = 0; i < 2; i++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+			glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+			glTexImage2D(
+				GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL
+			);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glFramebufferTexture2D(
+				GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0
+			);
+		}
+	}
+	
+
 	// Освещение
 	glm::vec3 lightPos, lightColor;
 	{
 		lightPos = glm::vec3(5.0f, 1.0f, 1.0f);
-		lightColor = glm::vec3(1.0f);
+		lightColor = glm::vec3(2.0f);
 	}
 
 	// отрисовывать кадр при каждом обновлении экрана 
@@ -352,6 +448,8 @@ int main()
 	shaderSSAO.setInt("gNormal", 1);
 	shaderSSAO.setInt("texNoise", 2);
 
+	std::cout << glGetError() << std::endl; // вернет код 0 (no error)
+
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
@@ -373,7 +471,6 @@ int main()
 
 		// Обработка ввода
 		processInput(window);
-
 		lightPos.x = 10 * sin(glfwGetTime());
 		lightPos.z = 10 * cos(glfwGetTime());
 
@@ -453,19 +550,18 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
-		// Рендеринг экранного прямоугольника
+		// Рендеринг экрана с эффектом SSAO, но без источников света
 		{
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glEnable(GL_DEPTH_TEST);
+			glBindFramebuffer(GL_FRAMEBUFFER, ssaoFinalFBO);
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-			screenShader.use();
-			screenShader.setInt("gPosition", 0);
-			screenShader.setInt("gNormal", 1);
-			screenShader.setInt("gColorSpec", 2);
-			screenShader.setInt("ssao", 3);
+			resultSSAOShader.use();
+			resultSSAOShader.setInt("gPosition", 0);
+			resultSSAOShader.setInt("gNormal", 1);
+			resultSSAOShader.setInt("gColorSpec", 2);
+			resultSSAOShader.setInt("ssao", 3);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, gPosition);
@@ -480,27 +576,27 @@ int main()
 			// переменные освещения
 			{
 				glm::vec3 lightPosView = glm::vec3(view*glm::vec4(lightPos, 1.0));
-				screenShader.setVec3("lights.Position", lightPosView);
-				screenShader.setVec3("lights.Color", lightColor);
+				resultSSAOShader.setVec3("lights.Position", lightPosView);
+				resultSSAOShader.setVec3("lights.Color", lightColor);
 
 
 
 				const float linear = 0.022;
 				const float quadratic = 0.0019;
 
-				screenShader.setFloat("lights.Linear", linear);
-				screenShader.setFloat("lights.Quadratic", quadratic);
+				resultSSAOShader.setFloat("lights.Linear", linear);
+				resultSSAOShader.setFloat("lights.Quadratic", quadratic);
 			}
 
 			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glDrawArrays(GL_TRIANGLES, 0, 6); // Заполнилась текстура ssaoScreenTexture, которая хранит сцену с ssao эфектом, но без отображения источников освещения
 
-			// Отрисовка источников освещения
+			// Отрисовка источников освещения в текстуру ssaoScreenTexture
 			{
 				glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // запись в заданный по умолчанию фреймбуфер
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, ssaoFinalFBO); // запись данных глубины в текстуру экрана с ssao-эффектом
 				glBlitFramebuffer(0, 0, SCR_WIDTH, SCR_HEIGHT, 0, 0, SCR_WIDTH, SCR_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				glBindFramebuffer(GL_FRAMEBUFFER, ssaoFinalFBO);
 
 				lightCubeShader.use();
 				lightCubeShader.setMat4("projection", projection);
@@ -515,9 +611,69 @@ int main()
 					glBindVertexArray(lightCubeVAO);
 					glDrawArrays(GL_TRIANGLES, 0, 36);;
 			}
+			glDisable(GL_DEPTH_TEST);
+
+			// Отрисовка текстуры на экране "текстура ssao-экран + источники освещения"
+			glBindFramebuffer(GL_FRAMEBUFFER, forLightBuffer);
+
+			
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			twiseScreenShader.use();
+			twiseScreenShader.setInt("ssaoScreenTexture", 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, ssaoScreenTexture);
+
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			// Размытие текстуры переосвещённого экрана
+			bool horizontal = true, first_iteration = true;
+			{
+				int amount = 10;
+				shaderBlur.use();
+				shaderBlur.setInt("image", 0);
+				for (unsigned int i = 0; i < amount; i++)
+				{
+					glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+					shaderBlur.setInt("horizontal", horizontal);
+					glBindTexture(
+						GL_TEXTURE_2D, first_iteration ? overLightScreenTexture : pingpongBuffer[!horizontal]
+					);
+					
+					glBindVertexArray(VAO);
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+
+					horizontal = !horizontal;
+					if (first_iteration)
+						first_iteration = false;
+				}
+			}
+
+			// Отрисовка на экран
+			{
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+				glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+				glClear(GL_COLOR_BUFFER_BIT);
+
+				screenShader.use();
+				screenShader.setInt("usualScreenTexture", 0);
+				screenShader.setInt("blurScreenTexture", 1);
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, usualScreenTexture);
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			}
+
+			
 		}
-
-
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
@@ -555,9 +711,16 @@ void processInput(GLFWwindow* window)
 		modelHigh = modelHigh - 0.01f;
 
 	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+	{
 		power = power - 1;
+		std::cout << power << std::endl;
+	}
+	
 	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
+	{
 		power = power + 1;
+		std::cout << power << std::endl;
+	}
 
 }
 

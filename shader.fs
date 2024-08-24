@@ -20,4 +20,5 @@ void main()
     gNormal = normalize(fs_in.Normal);
  
     gAlbedoSpec.rgb = texture(texture_diffuse0, fs_in.TexCoords).rgb;
+//    gAlbedoSpec.rgb = vec3(0.95);
 }
