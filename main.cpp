@@ -28,7 +28,7 @@ float lerp(float a, float b, float f);
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 5.0f, 15.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 
@@ -45,15 +45,34 @@ bool moveLight = true;
 bool inverseNormals = false;
 float highOfLight = 5.0f;
 
-float radius = 4.0f;
+float radius = 13.0f;
 
-const float linear = 0.14;
-const float quadratic = 0.07;
+/*
+
+Расстояние		Линейный	Квадратичный
+
+7				 0.7			1.8
+13				 0.35			0.44
+20				 0.22			0.20
+32				 0.14			0.07
+50				 0.09			0.032
+65				 0.07			0.017
+100				 0.045			0.0075
+160				 0.027			0.0028
+200				 0.022			0.0019
+325				 0.014			0.0007
+600				 0.007			0.0002
+3250			 0.0014			0.000007
+
+*/
+
+const float linear = 0.045;
+const float quadratic = 0.0075;
 
 float far = 100.0f; // test
 int samples = 20; // test
 
-bool shadows = false;
+bool shadows = true;
 
 bool reversFloor;
 
@@ -372,8 +391,6 @@ int main()
 		glBindVertexArray(0);
 	}
 
-
-
 	Shader geometricShader("../midnight/shader.vs", "../midnight/shader.fs", NULL);  // Шейдер для геометрического прохода
 	Shader lightCubeShader("../midnight/shader_1.vs", "../midnight/shader_1.fs", NULL); // Шейдер для отрисовки кубов-источников света
 	Shader shaderSSAO("../midnight/screenShader.vs", "../midnight/shaderSSAO.fs", NULL); // Шейдер для генерации ssao текстуры
@@ -389,9 +406,6 @@ int main()
 
 	stbi_set_flip_vertically_on_load(true);
 	Model backpack("C:/Users/Tyurin/Documents/GitHub/res/models/backpack/backpack.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-
-
-
 
 	// Настройка фреймбуфера для отложенного рендеринга
 	unsigned int gBuffer, gPosition, gNormal, gColorSpec, gWorldPosition, gWorldNormal;
@@ -605,10 +619,6 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-
-
-
-
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
@@ -665,11 +675,8 @@ int main()
 
 	std::cout << glGetError() << std::endl; // вернет код 0 (no error)
 
-
 	float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
 	float near = 1.0f;
-
-
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -706,7 +713,6 @@ int main()
 			lightPos.z = radius * cos(glfwGetTime());
 		}
 
-
 		//	glEnable(GL_FRAMEBUFFER_SRGB); // автоматическая гамма коррекция
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
@@ -734,7 +740,7 @@ int main()
 			glCullFace(GL_BACK);	// отсечение задних граней
 			glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			//Передача основных матриц и позиции камеры шейдеру
@@ -762,7 +768,6 @@ int main()
 					glDrawArrays(GL_TRIANGLES, 0, 6);
 				}
 				
-
 				// Отрисовка рюкзака
 				{
 					model = glm::mat4(1.0f);
@@ -791,8 +796,6 @@ int main()
 					glFrontFace(GL_CCW);	// Передняя грань определяется "против часовой" стрелки
 				}
 				*/
-				
-
 			}
 
 		}
@@ -825,7 +828,6 @@ int main()
 					shadowShader.setMat4("model", model);
 					glBindVertexArray(VAO);
 					glDrawArrays(GL_TRIANGLES, 0, 6);
-
 				}
 				
 				// Отрисовка рюкзака
@@ -899,7 +901,7 @@ int main()
 		// Рендеринг экрана с эффектом SSAO, но без источников света
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, ssaoFinalFBO);
-			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -1068,21 +1070,9 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		modelHigh = modelHigh + 0.01f;
+		modelHigh = modelHigh + 0.1f;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		modelHigh = modelHigh - 0.01f;
-
-	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
-	{
-		reversFloor = false;
-		std::cout << "reversFloor is " << reversFloor << std::endl;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS)
-	{
-		reversFloor = true;
-		std::cout << "reversFloor is " << reversFloor << std::endl;
-	}
+		modelHigh = modelHigh - 0.1f;
 
 	if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
 	{

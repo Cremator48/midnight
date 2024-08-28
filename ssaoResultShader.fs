@@ -42,9 +42,9 @@ uniform Light lights;
 float ShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
     vec3 fragToLight = fragPos - lights.Position; 
-//    float closestDepth = texture(depthMap, fragToLight).r;
+//  float closestDepth = texture(depthMap, fragToLight).r;
 
-//    closestDepth *= far_plane;
+//  closestDepth *= far_plane;
 
     float currentDepth = length(fragToLight);
 
@@ -62,7 +62,7 @@ float ShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
             shadow += 1.0;
     }
 
-//    FragColor = vec4(vec3(closestDepth / far_plane), 1.0); 
+//  FragColor = vec4(vec3(closestDepth / far_plane), 1.0); 
     shadow /= float(samples);  
     return shadow;
 }
@@ -89,8 +89,7 @@ void main()
 
     float shadow = shadows ? ShadowCalculation(WorldPos, WorldNormal, lightWorldDir) : 0.0;                 
     vec3 lighting = (ambient + (1.0 - shadow) * diffuse);
-//    vec3 lighting = (ambient + diffuse);
+
 
     FragColor = vec4(lighting, 1.0);
-//    FragColor = vec4(FragPos, 1.0);
 }
