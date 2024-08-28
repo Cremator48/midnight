@@ -7,7 +7,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D texNoise;
  
-uniform vec3 samples[32];
+uniform vec3 samples[8];
 uniform mat4 projection;
 
 uniform int power;
@@ -25,7 +25,7 @@ void main()
 	mat3 TBN = mat3(tangent, bitangent, normal); 
 
 	float occlusion = 0.0;
-	float kernelSize = 32;
+	float kernelSize = 8;
 	float radius = 0.5;
 
 	for(int i = 0; i < kernelSize; ++i)

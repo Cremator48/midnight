@@ -8,16 +8,29 @@ uniform sampler2D gNormal;
 uniform sampler2D gColorSpec;
 uniform sampler2D ssao;
 uniform sampler2D gWorldPosition;
+uniform sampler2D gWorldNormal;
 uniform samplerCube depthMap;
 
 
+
 uniform float far_plane;
+uniform vec3 viewPos;
+uniform bool shadows;
+uniform int samples;
 
 
-
+vec3 sampleOffsetDirections[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);  
 
 struct Light {
     vec3 Position;
+    vec3 PositionView;
     vec3 Color;
 
     float Linear;
@@ -26,22 +39,32 @@ struct Light {
 
 uniform Light lights;
 
-float ShadowCalculation(vec3 fragPos)
+float ShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
     vec3 fragToLight = fragPos - lights.Position; 
-    float closestDepth = texture(depthMap, fragToLight).r;
+//    float closestDepth = texture(depthMap, fragToLight).r;
 
-    closestDepth *= far_plane;
+//    closestDepth *= far_plane;
 
     float currentDepth = length(fragToLight);
 
-    float bias = 0.05; 
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-
-//    FragColor = vec4(vec3(closestDepth / far_plane), 1.0);
-
-    return shadow;
+    float shadow = 0.0;
+    float bias = 0.15;
     
+
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(depthMap, fragToLight + sampleOffsetDirections[i] * diskRadius).r;
+        closestDepth *= far_plane;
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+
+//    FragColor = vec4(vec3(closestDepth / far_plane), 1.0); 
+    shadow /= float(samples);  
+    return shadow;
 }
 
 void main()
@@ -50,24 +73,24 @@ void main()
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 WorldPos = texture(gWorldPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
+    vec3 WorldNormal = texture(gWorldNormal, TexCoords).rgb;
     vec3 Color = texture(gColorSpec, TexCoords).rgb;
     float ssaoTexture = texture(ssao, TexCoords).r;
     
-    vec3 ambient = vec3(0.1 * Color * ssaoTexture);
+    vec3 ambient = vec3(0.3 * ssaoTexture * Color);
   
-    vec3 lightDir = normalize(lights.Position - FragPos);
-    vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Color * lights.Color;
+    vec3 lightDir = normalize(lights.PositionView - FragPos);
+    vec3 lightWorldDir = normalize(lights.Position - WorldPos);
+    vec3 diffuse = max(dot(Normal, lightDir), 0.0) * lights.Color  * Color;
 
-    float distance = length(lights.Position - FragPos);
+    float distance = length(lights.PositionView - FragPos);
     float attenuation = 1.0 / (1.0 + lights.Linear * distance + lights.Quadratic * distance * distance);
     diffuse *= attenuation;
 
-    float shadow = ShadowCalculation(WorldPos);                      
+    float shadow = shadows ? ShadowCalculation(WorldPos, WorldNormal, lightWorldDir) : 0.0;                 
     vec3 lighting = (ambient + (1.0 - shadow) * diffuse);
+//    vec3 lighting = (ambient + diffuse);
 
     FragColor = vec4(lighting, 1.0);
-//    FragColor = vec4((ambient + diffuse), 1.0);
-
-//      FragColor = vec4(WorldPos, 1.0);
-    
+//    FragColor = vec4(FragPos, 1.0);
 }

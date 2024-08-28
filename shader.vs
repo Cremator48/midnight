@@ -8,11 +8,13 @@ out VS_OUT {
     vec3 WorldPos;
     vec2 TexCoords;
     vec3 Normal;
+    vec3 WorldNormal;
 } vs_out;
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+uniform bool inverseNormals;
 
 void main()
 {
@@ -22,7 +24,17 @@ void main()
     vs_out.TexCoords = aTexCoords;
     
     mat3 normalMatrix = transpose(inverse(mat3(view * model)));
-    vs_out.Normal = normalMatrix * aNormal;
+    if(inverseNormals == true)
+    {
+        vs_out.Normal = normalMatrix * (-1.0 * aNormal);
+        vs_out.WorldNormal = transpose(inverse(mat3(model))) * (-1.0 * aNormal);
+    }
+    else
+    {
+        vs_out.Normal = normalMatrix * aNormal;
+        vs_out.WorldNormal = transpose(inverse(mat3(model))) * aNormal;
+    }
+    
     
     gl_Position = projection * viewPos;
 }
