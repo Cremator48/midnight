@@ -22,7 +22,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 unsigned int loadTexture(char const* path);
 float lerp(float a, float b, float f);
-
+float module(float a);
 
 // Константы
 const unsigned int SCR_WIDTH = 1600;
@@ -38,10 +38,11 @@ float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
 float modelHigh = 3.0f;
+float exposure = 0.2f;
 
 int power = 1;
 
-bool moveLight = true;
+bool moveLight = false;
 bool inverseNormals = false;
 float highOfLight = 5.0f;
 
@@ -487,6 +488,10 @@ int main()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	unsigned int ssaoBlurFBO, ssaoColorBufferBlur;
@@ -499,6 +504,10 @@ int main()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
+
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 
@@ -511,7 +520,7 @@ int main()
 
 		glGenTextures(1, &ssaoScreenTexture);
 		glBindTexture(GL_TEXTURE_2D, ssaoScreenTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -595,7 +604,7 @@ int main()
 
 	// Фреймбуффер для ренедера теней
 	unsigned int depthMapFBO, depthCubemap;
-	const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
 	{
 		glGenFramebuffers(1, &depthMapFBO);
 		glGenTextures(1, &depthCubemap);
@@ -641,7 +650,7 @@ int main()
 		sample = glm::normalize(sample);
 		sample *= randomFloats(generator);
 
-		float scale = (float)i / 64.0;
+		float scale = (float)i / 8.0;
 		scale = lerp(0.1f, 1.0f, scale * scale);
 		sample *= scale;
 		ssaoKernel.push_back(sample);
@@ -678,6 +687,11 @@ int main()
 	float aspect = (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT;
 	float near = 1.0f;
 
+	float lastFrameO = glfwGetTime(); // Время предыдущего кадра
+	float curentFrameO; // Время текущего кадра
+
+	float sinOfLastExpHith = glfwGetTime();;
+
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
@@ -689,6 +703,9 @@ int main()
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
+
+		curentFrameO = glfwGetTime(); // Время текущего кадра
+		
 
 		//отсчёт времени для нормализации скорости движения
 		{
@@ -748,7 +765,7 @@ int main()
 				geometricShader.use();
 				geometricShader.setMat4("projection", projection);
 				geometricShader.setMat4("view", view);
-				
+
 			}
 
 			// Рендеринг объектов
@@ -767,7 +784,7 @@ int main()
 					glBindVertexArray(VAO);
 					glDrawArrays(GL_TRIANGLES, 0, 6);
 				}
-				
+
 				// Отрисовка рюкзака
 				{
 					model = glm::mat4(1.0f);
@@ -829,7 +846,7 @@ int main()
 					glBindVertexArray(VAO);
 					glDrawArrays(GL_TRIANGLES, 0, 6);
 				}
-				
+
 				// Отрисовка рюкзака
 				{
 					model = glm::mat4(1.0f);
@@ -854,7 +871,7 @@ int main()
 					glDrawArrays(GL_TRIANGLES, 0, 36);
 				}
 				*/
-				
+
 			}
 
 		}
@@ -874,7 +891,7 @@ int main()
 			shaderSSAO.use();
 			shaderSSAO.setInt("power", power);
 
-			for (int i = 0; i < 16; ++i)
+			for (int i = 0; i < 8; ++i)
 			{
 				shaderSSAO.setVec3("samples[" + std::to_string(i) + "]", ssaoKernel[i]);
 			}
@@ -899,11 +916,11 @@ int main()
 		}
 
 		// Рендеринг экрана с эффектом SSAO, но без источников света
+		bool horizontal = true, first_iteration = true;
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, ssaoFinalFBO);
 			glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 			resultSSAOShader.use();
 			resultSSAOShader.setInt("gPosition", 0);
@@ -915,6 +932,7 @@ int main()
 			resultSSAOShader.setInt("gWorldNormal", 6);
 
 			resultSSAOShader.setFloat("far_plane", far);
+			resultSSAOShader.setFloat("exposure", exposure);
 			resultSSAOShader.setInt("samples", samples);
 			resultSSAOShader.setBool("shadows", shadows);
 
@@ -932,9 +950,6 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, gWorldPosition);
 			glActiveTexture(GL_TEXTURE6);
 			glBindTexture(GL_TEXTURE_2D, gWorldNormal);
-
-
-
 
 			// переменные освещения
 			{
@@ -978,21 +993,44 @@ int main()
 			glDisable(GL_DEPTH_TEST);
 
 			// Отрисовка текстуры на экране "текстура ssao-экран + источники освещения"
-			glBindFramebuffer(GL_FRAMEBUFFER, forLightBuffer);
+			{
+				glBindFramebuffer(GL_FRAMEBUFFER, forLightBuffer);
 
 
-			glClear(GL_COLOR_BUFFER_BIT);
+				glClear(GL_COLOR_BUFFER_BIT);
 
-			twiseScreenShader.use();
-			twiseScreenShader.setInt("ssaoScreenTexture", 0);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, ssaoScreenTexture);
+				twiseScreenShader.use();
+				twiseScreenShader.setInt("ssaoScreenTexture", 0);
+			//	twiseScreenShader.setFloat("exposure", exposure);
 
-			glBindVertexArray(VAO);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+				/*
+					
+					if (module(glm::sin(curentFrameO)) < module(glm::sin(lastFrameO)))
+				{
+					twiseScreenShader.setFloat("sinTime", glm::sin(curentFrameO));
+					sinOfLastExpHith = glm::sin(curentFrameO);
+					std::cout << "glm::abs(glm::sin(curentFrame)) = " << glm::sin(curentFrameO) << "\n";
+				}
+				else
+				{
+					twiseScreenShader.setFloat("sinTime", sinOfLastExpHith);
+					std::cout << "glm::abs(glm::sin(lastFrame)) = " << sinOfLastExpHith << "\n";
+				}
+				lastFrameO = curentFrameO;
+
+				*/
+				
+
+				
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, ssaoScreenTexture);
+
+				glBindVertexArray(VAO);
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
 
 			// Размытие текстуры переосвещённого экрана
-			bool horizontal = true, first_iteration = true;
+
 			{
 				int amount = 10;
 				shaderBlur.use();
@@ -1014,28 +1052,30 @@ int main()
 				}
 			}
 
-			// Отрисовка на экран
-			{
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-				glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-				glClear(GL_COLOR_BUFFER_BIT);
 
-				screenShader.use();
-				screenShader.setInt("usualScreenTexture", 0);
-				screenShader.setInt("blurScreenTexture", 1);
+		}
 
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, usualScreenTexture);
-				glActiveTexture(GL_TEXTURE1);
-				glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
+		// Отрисовка на экран
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-				glBindVertexArray(VAO);
-				glDrawArrays(GL_TRIANGLES, 0, 6);
+			glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-			}
+			glClear(GL_COLOR_BUFFER_BIT);
 
+			screenShader.use();
+			screenShader.setInt("usualScreenTexture", 0);
+			screenShader.setInt("blurScreenTexture", 1);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, usualScreenTexture);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
+
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		}
 
@@ -1109,17 +1149,13 @@ void processInput(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
 	{
-		if (samples > 1)
-			samples -= 1;
-
-		std::cout << samples << std::endl;
+		exposure -= 0.01;
+		std::cout << exposure << std::endl;
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
-		if (samples < 20)
-			samples += 1;
-
-		std::cout << samples << std::endl;
+		exposure += 0.01;
+		std::cout << exposure << std::endl;
 	}
 
 
@@ -1201,4 +1237,9 @@ unsigned int loadTexture(char const* path)
 float lerp(float a, float b, float f)
 {
 	return a + f * (b - a);
+}
+
+float module(float a)
+{
+	return a < 0 ? -a : a;
 }

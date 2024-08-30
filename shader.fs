@@ -29,5 +29,5 @@ void main()
     gAlbedoSpec.rgb = texture(texture_diffuse0, fs_in.TexCoords).rgb;
 
     gWorldPosition.rgb = fs_in.WorldPos;
-    //gAlbedoSpec.rgb = vec3(0.95);
+//    gAlbedoSpec.rgb = vec3(0.95);
 }

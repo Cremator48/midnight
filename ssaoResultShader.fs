@@ -14,9 +14,12 @@ uniform samplerCube depthMap;
 
 
 uniform float far_plane;
+// uniform float exposure;
 uniform vec3 viewPos;
 uniform bool shadows;
 uniform int samples;
+
+
 
 
 vec3 sampleOffsetDirections[20] = vec3[]
@@ -42,9 +45,9 @@ uniform Light lights;
 float ShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
     vec3 fragToLight = fragPos - lights.Position; 
-//  float closestDepth = texture(depthMap, fragToLight).r;
+    //  float closestDepth = texture(depthMap, fragToLight).r;
 
-//  closestDepth *= far_plane;
+    //  closestDepth *= far_plane;
 
     float currentDepth = length(fragToLight);
 
@@ -62,21 +65,30 @@ float ShadowCalculation(vec3 fragPos, vec3 normal, vec3 lightDir)
             shadow += 1.0;
     }
 
-//  FragColor = vec4(vec3(closestDepth / far_plane), 1.0); 
+    //  FragColor = vec4(vec3(closestDepth / far_plane), 1.0); 
     shadow /= float(samples);  
     return shadow;
 }
 
 void main()
 {   
-    // Получаем данные из G-буфера
+    const float gamma = 2.2;
+
     vec3 FragPos = texture(gPosition, TexCoords).rgb;
     vec3 WorldPos = texture(gWorldPosition, TexCoords).rgb;
     vec3 Normal = texture(gNormal, TexCoords).rgb;
     vec3 WorldNormal = texture(gWorldNormal, TexCoords).rgb;
+
     vec3 Color = texture(gColorSpec, TexCoords).rgb;
+
     float ssaoTexture = texture(ssao, TexCoords).r;
-    
+
+//    Color =* exposure;
+
+//    vec3 ldrColor = vec3(1.0) - exp(-Color * exposure);
+
+//    ldrColor = pow(ldrColor, vec3(1.0 / gamma));
+
     vec3 ambient = vec3(0.3 * ssaoTexture * Color);
   
     vec3 lightDir = normalize(lights.PositionView - FragPos);
