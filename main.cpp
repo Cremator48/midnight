@@ -20,6 +20,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
 unsigned int loadTexture(char const* path);
 float lerp(float a, float b, float f);
 float module(float a);
@@ -38,13 +40,15 @@ float deltaTime = 0.0f;	// время между текущим и последним кадрами
 float lastFrame = 0.0f; // время последнего кадра
 
 float modelHigh = 3.0f;
-float exposure = 1.0f;
+float exposure = 0.7f;
 
 int power = 1;
 
 bool moveLight = false;
 bool inverseNormals = false;
 float highOfLight = 5.0f;
+
+bool autoExposition = true;
 
 float radius = 13.0f;
 
@@ -103,6 +107,7 @@ int main()
 		glfwMakeContextCurrent(window);
 		glfwSetCursorPosCallback(window, mouse_callback);
 		glfwSetScrollCallback(window, scroll_callback);
+		glfwSetKeyCallback(window, key_callback);
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
@@ -1066,6 +1071,7 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			// Проверка на переосвещённость центрального пикселя
+			if(autoExposition)
 			{
 				float data[75]; // квадрат 5 на 5 это 25 пикселей, у каждого пикселя по 3 цветовых атрибута типа float, всего 3 * 25 = 75 атрибутов
 				glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -1079,7 +1085,7 @@ int main()
 
 				midColor /= 75.0f;
 
-			//	std::cout << "midColor = " << midColor << "\n";
+				//	std::cout << "midColor = " << midColor << "\n";
 
 				if (midColor > 0.9f)
 				{
@@ -1177,6 +1183,7 @@ void processInput(GLFWwindow* window)
 	}
 
 
+
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция
@@ -1260,4 +1267,10 @@ float lerp(float a, float b, float f)
 float module(float a)
 {
 	return a < 0 ? -a : a;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_G && action == GLFW_PRESS)
+		autoExposition = !autoExposition;
 }
