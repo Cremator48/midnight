@@ -38,7 +38,7 @@ float deltaTime = 0.0f;	// врем€ между текущим и последним кадрами
 float lastFrame = 0.0f; // врем€ последнего кадра
 
 float modelHigh = 3.0f;
-float exposure = 0.2f;
+float exposure = 1.0f;
 
 int power = 1;
 
@@ -990,6 +990,9 @@ int main()
 				glBindVertexArray(lightCubeVAO);
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
+		
+
+
 			glDisable(GL_DEPTH_TEST);
 
 			// ќтрисовка текстуры на экране "текстура ssao-экран + источники освещени€"
@@ -1001,24 +1004,9 @@ int main()
 
 				twiseScreenShader.use();
 				twiseScreenShader.setInt("ssaoScreenTexture", 0);
-			//	twiseScreenShader.setFloat("exposure", exposure);
+				twiseScreenShader.setFloat("exposure", exposure);
 
-				/*
-					
-					if (module(glm::sin(curentFrameO)) < module(glm::sin(lastFrameO)))
-				{
-					twiseScreenShader.setFloat("sinTime", glm::sin(curentFrameO));
-					sinOfLastExpHith = glm::sin(curentFrameO);
-					std::cout << "glm::abs(glm::sin(curentFrame)) = " << glm::sin(curentFrameO) << "\n";
-				}
-				else
-				{
-					twiseScreenShader.setFloat("sinTime", sinOfLastExpHith);
-					std::cout << "glm::abs(glm::sin(lastFrame)) = " << sinOfLastExpHith << "\n";
-				}
-				lastFrameO = curentFrameO;
-
-				*/
+				
 				
 
 				
@@ -1076,6 +1064,36 @@ int main()
 
 			glBindVertexArray(VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			// ѕроверка на переосвещЄнность центрального пиксел€
+			{
+				float data[75]; // квадрат 5 на 5 это 25 пикселей, у каждого пиксел€ по 3 цветовых атрибута типа float, всего 3 * 25 = 75 атрибутов
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+				glReadPixels((SCR_WIDTH / 2.0f), (SCR_HEIGHT / 2.0f), 5, 5, GL_RGB, GL_FLOAT, &data);
+
+				float midColor = 0.0f;
+				for (int i = 0; i < 75; ++i)
+				{
+					midColor += data[i];
+				}
+
+				midColor /= 75.0f;
+
+			//	std::cout << "midColor = " << midColor << "\n";
+
+				if (midColor > 0.9f)
+				{
+					exposure -= 0.01;
+					std::cout << "exposure = " << exposure << "\n";
+				}
+				if (midColor < 0.3f)
+				{
+					exposure += 0.01;
+					std::cout << "exposure = " << exposure << "\n";
+				}
+					
+			}
+
 
 		}
 
