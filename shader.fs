@@ -1,33 +1,25 @@
 #version 330 core
-layout (location = 0) out vec3 gPosition;
-layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec3 gAlbedoSpec;
-layout (location = 3) out vec3 gWorldPosition;
-layout (location = 4) out vec3 gWorldNormal;
+out vec4 FragColor;
 
-in VS_OUT {
-    vec3 FragPos;
-    vec3 WorldPos;
-    vec2 TexCoords;
-    vec3 Normal;
-    vec3 WorldNormal;
-} fs_in;
-
-uniform sampler2D texture_diffuse0;
+in vec3 Normal;  
+in vec3 FragPos;  
+  
+uniform vec3 lightPos; 
 
 void main()
-{           
-    
-    gPosition = fs_in.FragPos;
-    gWorldPosition = fs_in.WorldPos;
- 
-    
-    gNormal = normalize(fs_in.Normal);
-    gWorldNormal = normalize(fs_in.WorldNormal);
- 
-    
-    gAlbedoSpec.rgb = texture(texture_diffuse0, fs_in.TexCoords).rgb;
+{
+    vec3 lightColor = vec3(1.0);
 
-    gWorldPosition.rgb = fs_in.WorldPos;
-//    gAlbedoSpec.rgb = vec3(0.95);
-}
+    // ќкружающа€ составл€юща€
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+  	
+    // ƒиффузна€ составл€юща€ 
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(lightPos - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * lightColor;
+            
+    vec3 result = (ambient + diffuse) * vec3(1.0);
+    FragColor = vec4(result, 1.0);
+} 

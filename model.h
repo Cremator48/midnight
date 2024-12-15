@@ -140,6 +140,7 @@ private:
             vector.y = mesh->mBitangents[i].y;
             vector.z = mesh->mBitangents[i].z;
             vertex.Bitangent = vector;
+
             vertices.push_back(vertex);
         }
 
@@ -153,6 +154,7 @@ private:
         }
         // Обрабатываем материалы
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
         // Мы вводим соглашение об именах сэмплеров в шейдерах. Каждая диффузная текстура будет называться 'texture_diffuseN',
         // где N - это порядковый номер от 1 до MAX_SAMPLER_NUMBER. 
         // То же самое относится и к другим текстурам:
@@ -176,6 +178,8 @@ private:
         // 4. Карты высот
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
+     //   std::cout << mesh->mBones[0]->mName.C_Str() << "\n";
 
         // Возвращаем Mesh-объект, созданный на основе полученных данных
         return Mesh(vertices, indices, textures);

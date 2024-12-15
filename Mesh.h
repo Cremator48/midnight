@@ -12,6 +12,12 @@
 #include <vector>
 using namespace std;
 
+struct BoneWeight
+{
+    int boneID;
+    float boneWeight;
+};
+
 struct Vertex {
 
     // Позиция
@@ -28,6 +34,21 @@ struct Vertex {
 
     // Вектор бинормали (вектор, перпендикулярный касательному вектору и вектору нормали)
     glm::vec3 Bitangent;
+
+    /*
+    // Вес и ID кости 0
+    BoneWeight weight0;
+
+    // Вес и ID кости 1
+    BoneWeight weight1;
+
+    // Вес и ID кости 2
+    BoneWeight weight2;
+
+    // Вес и ID кости 3
+    BoneWeight weight3;
+    */
+    
 };
 
 struct Texture {
