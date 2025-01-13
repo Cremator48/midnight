@@ -29,6 +29,9 @@ public:
     // Данные модели 
     vector<Texture> textures_loaded; // (оптимизация) сохраняем все загруженные текстуры, чтобы убедиться, что они не загружены более одного раза
     vector<Mesh> meshes;
+    vector<unsigned int> BaseVertices;
+    vector<VertexBoneData> m_Bones;
+    map<string,unsigned int> m_BoneNameToIndexMap;
     string directory;
     bool gammaCorrection;
 
@@ -53,10 +56,7 @@ private:
         Assimp::Importer importer;
 
         const aiScene* scene = importer.ReadFile(path, pFlags); // aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace
-        
-
-
-        
+       
 
         // Проверка на ошибки
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // если НЕ 0
@@ -72,16 +72,29 @@ private:
         processNode(scene->mRootNode, scene);
     }
 
+  
+
     // Рекурсивная обработка узла. Обрабатываем каждый отдельный меш, расположенный в узле, и повторяем этот процесс для своих дочерних узлов (если таковые вообще имеются)
     void processNode(aiNode* node, const aiScene* scene)
     {
+        
+        BaseVertices.resize(scene->mNumMeshes);
         // Обрабатываем каждый меш текущего узла
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
             // Узел содержит только индексы объектов в сцене.
             // Сцена же содержит все данные; узел - это лишь способ организации данных
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(processMesh(mesh, scene));
+
+            unsigned int totalVertices = 0;
+            
+
+            BaseVertices[i] = mesh->mNumVertices;
+            m_Bones.resize(totalVertices+(mesh->mNumVertices));
+            
+            meshes.push_back(processMesh(mesh, scene, i));
+
+            
         }
         // После того, как мы обработали все меши (если таковые имелись), мы начинаем рекурсивно обрабатывать каждый из дочерних узлов
         for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -91,7 +104,7 @@ private:
 
     }
 
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene)
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene, int meshIndex)
     {
         // Данные для заполнения
         vector<Vertex> vertices;
@@ -133,6 +146,7 @@ private:
             vector.x = mesh->mTangents[i].x;
             vector.y = mesh->mTangents[i].y;
             vector.z = mesh->mTangents[i].z;
+
             vertex.Tangent = vector;
 
             // Вектор бинормали
@@ -179,10 +193,48 @@ private:
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-     //   std::cout << mesh->mBones[0]->mName.C_Str() << "\n";
+        // Загрузить кости
+        LoadMeshBones(meshIndex, mesh);
 
         // Возвращаем Mesh-объект, созданный на основе полученных данных
         return Mesh(vertices, indices, textures);
+    }
+
+    void LoadMeshBones(unsigned int MeshIndex, const aiMesh* pMesh)
+    {
+        for (unsigned int i = 0; i < pMesh->mNumBones; i++) {
+            LoadSingleBone(MeshIndex, pMesh->mBones[i]);
+        }
+    }
+
+
+    void LoadSingleBone(unsigned int MeshIndex, const aiBone* pBone)
+    {
+        int BoneId = GetBoneId(pBone);
+
+        for (unsigned int i = 0; i < pBone->mNumWeights; i++) {
+            const aiVertexWeight& vw = pBone->mWeights[i];
+            unsigned int GlobalVertexID = BaseVertices[MeshIndex] + pBone->mWeights[i].mVertexId;
+            m_Bones[GlobalVertexID].AddBoneData(BoneId, vw.mWeight);
+        }
+    }
+
+
+    int GetBoneId(const aiBone* pBone)
+    {
+        int BoneIndex = 0;
+        string BoneName(pBone->mName.C_Str());
+
+        if (m_BoneNameToIndexMap.find(BoneName) == m_BoneNameToIndexMap.end()) {
+            // Allocate an index for a new bone
+            BoneIndex = (int)m_BoneNameToIndexMap.size();
+            m_BoneNameToIndexMap[BoneName] = BoneIndex;
+        }
+        else {
+            BoneIndex = m_BoneNameToIndexMap[BoneName];
+        }
+
+        return BoneIndex;
     }
 
     // Проверяем все текстуры материалов заданного типа и загружам текстуры, если они еще не были загружены.
@@ -259,4 +311,8 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 
     return textureID;
 }
+
+
+
+
 #endif

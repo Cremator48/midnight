@@ -57,6 +57,33 @@ struct Texture {
     string path;
 };
 
+struct VertexBoneData
+{
+    #define MAX_NUM_BONES_PER_VERTEX 4
+
+    unsigned int BoneIDs[MAX_NUM_BONES_PER_VERTEX] = { 0 };
+    float Weights[MAX_NUM_BONES_PER_VERTEX] = { 0.0f };
+
+    VertexBoneData()
+    {
+    }
+
+    void AddBoneData(unsigned int BoneID, float Weight)
+    {
+        for (unsigned int i = 0; i < sizeof(BoneIDs)/sizeof(BoneIDs); i++) {
+            if (Weights[i] == 0.0) {
+                BoneIDs[i] = BoneID;
+                Weights[i] = Weight;
+                return;
+            }
+        }
+
+        // should never get here - more bones than we have space for
+        assert(0);
+    }
+};
+
+
 class Mesh {
 public:
     // Данные меша
@@ -75,6 +102,7 @@ public:
         // Теперь, когда у нас есть все необходимые данные, устанавливаем вершинные буферы и указатели атрибутов
         setupMesh();
     }
+
 
     // Рендеринг меша
     void Draw(Shader& shader)
@@ -118,6 +146,7 @@ public:
 private:
     // Данные для рендеринга 
     unsigned int VBO, EBO;
+    std::vector<VertexBoneData> m_Bones;
 
     // Инициализируем все буферные объекты/массивы
     void setupMesh()
@@ -133,7 +162,8 @@ private:
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         // Самое замечательное в структурах то, что расположение в памяти их внутренних переменных является последовательным.
-        // Смысл данного трюка в том, что мы можем просто передать указатель на структуру, и она прекрасно преобразуется в массив данных с элементами типа glm::vec3 (или glm::vec2), который затем будет преобразован в массив данных float, ну а в конце – в байтовый массив
+        // Смысл данного трюка в том, что мы можем просто передать указатель на структуру, и она прекрасно преобразуется в массив данных с элементами типа glm::vec3 (или glm::vec2), 
+        // который затем будет преобразован в массив данных float, ну а в конце – в байтовый массив
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -163,5 +193,9 @@ private:
 
         glBindVertexArray(0);
     }
+
+
+    
+
 };
 #endif

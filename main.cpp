@@ -79,15 +79,13 @@ int main()
 	Shader shader("../midnight/shader.vs", "../midnight/shader.fs", NULL); // Шейдер
 	
 
-//	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/human/human.fbx", aiProcess_Triangulate | /* aiProcess_FlipUVs | */ aiProcess_CalcTangentSpace);
-
-	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man1.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
 	// Раскомментируйте следующую строку для отрисовки полигонов в режиме каркаса
-//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	
 	glEnable(GL_DEPTH_TEST);
