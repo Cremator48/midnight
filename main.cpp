@@ -79,7 +79,7 @@ int main()
 	Shader shader("../midnight/shader.vs", "../midnight/shader.fs", NULL); // Шейдер
 	
 
-	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	// Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
@@ -127,7 +127,7 @@ int main()
 
 		shader.setVec3("lightPos", lightPos);
 
-		ourModel.Draw(shader);
+//		ourModel.Draw(shader);
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
