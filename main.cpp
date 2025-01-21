@@ -79,8 +79,35 @@ int main()
 	Shader shader("../midnight/shader.vs", "../midnight/shader.fs", NULL); // Шейдер
 	
 
-	// Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	// Класс Model будет содержать следующие приватные члены:
+	// m_VAO
+	// m_Buffers[NumOfBonesPerVertex]
+	// m_Positions - позиции
+	// m_Normals - нормали
+	// m_TexCoord - текстурные координаты
+	// m_Bones - индексы и веса костей <VertexBoneData>
+	// m_Meshes - массив структур данных о мешах <MeshInformation>
+	// Структуры MeshInformation и VertexBoneData
+	// define NumOfBonesPerVertex количество влияющих костей на вершину. У нас 4
+
+	// Последовательность загрузки модели:
+	// 1. Создание и генерация VAO и VBO (или EBO). 
+	// 2. Создание массивов для хранения данных для каждой вершины:
+	//	а) m_Positions - позиции
+	//  б) m_Normals - нормали
+	//	в) m_TexCoord - текстурные координаты
+	//  г) m_Bones - индексы и веса костей <VertexBoneData>
+	// 3. Заполнение массивов информацией из меша
+	// 4. Создание буфферов для хранения данных о вершинах
+	// 5. Привязка и указание данных для буфферов 
+	// 6. Настройка вершинных атрибутов
 	
+	// 
+	// 
+	// 
+	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	
+
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
 
