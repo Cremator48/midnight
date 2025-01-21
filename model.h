@@ -82,6 +82,12 @@ private:
 		unsigned int MaterialIndex;
 	};
 
+	struct Texture {
+		unsigned int id;
+		std::string type;
+		std::string path; // мы сохраняем путь к текстуре, чтобы сравнивать с другими текстурами
+	};
+
 	enum BufferType
 	{
 		INDEX_BUFFER = 0,
@@ -96,8 +102,10 @@ private:
 	unsigned int m_VAO = 0;
 	unsigned int m_Buffers[NUM_BUFFERS] = { 0 };
 
+	std::string directory;
+
 	std::vector<BasicMeshEntry> m_Meshes;
-	std::vector<unsigned int> m_Materials;
+	std::vector<Texture> m_Textures;
 
 	std::vector<glm::vec3> m_Positions;
 	std::vector<glm::vec3> m_Normals;
@@ -126,6 +134,8 @@ private:
 	{
 		Clear();
 
+		directory = Filename.substr(0, Filename.find_last_of('/'));
+
 		glGenVertexArrays(1, &m_VAO);
 		glBindVertexArray(m_VAO);
 
@@ -151,7 +161,7 @@ private:
 	void InitFromScene(const aiScene* pScene, const std::string& Filename)
 	{
 		m_Meshes.resize(pScene->mNumMeshes);
-		m_Materials.resize(pScene->mNumMaterials);
+		m_Textures.resize(pScene->mNumMaterials);
 
 		unsigned int NumVertices = 0;
 		unsigned int NumIndices = 0;
@@ -162,9 +172,14 @@ private:
 
 		ReserveSpace(NumVertices, NumIndices);
 
+		
 		InitAllMeshes(pScene);
 
-		// if(!InitAllMaterials(pScene, Filename)) { std::cout << "Error init all materials!\n";}
+		if (pScene->HasMaterials())
+		{
+			if (!InitAllMaterials(pScene, Filename)) { std::cout << "Error init all materials!\n"; }
+		}
+		
 
 		// PopulateBuffers();
 
@@ -278,10 +293,85 @@ private:
 	}
 
 
+	bool InitAllMaterials(const aiScene *pScene, std::string Filename)
+	{
+		for (int i = 0; i < pScene->mNumMaterials; i++)
+		{
+			aiString path;
+			m_Textures[i].id = pScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path, NULL, NULL, NULL, NULL, NULL);
+		}
+	}
+
+	std::vector<Texture> LoadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+	{
+		std::vector<Texture> textures;
+
+		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+		{
+			aiString str;
+			mat->GetTexture(type, i, &str);
+			Texture texture;
+			texture.id = TextureFromFile(str.C_Str(), this->directory);
+			texture.path = str.C_Str();
+			texture.type = typeName;
+			textures.push_back(texture);
+		}
+
+		return textures;
+	}
+
 
 	void PopulateBuffers()
 	{
 
+	}
+
+	unsigned int TextureFromFile(const char* path, const std::string& directory)
+	{
+		std::string filename = std::string(path);
+		filename = directory + "/" + filename;
+
+		unsigned int textureID;
+		glGenTextures(1, &textureID);
+
+		int width, height, nrComponents;
+
+		unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+
+		if (data)
+		{
+			GLenum format = 0;
+			if (nrComponents == 0)
+			{
+				format = GL_RED;
+			}
+			else if (nrComponents == 3)
+			{
+				format = GL_RGB;
+			}
+			else if (nrComponents == 4)
+			{
+				format = GL_RGBA;
+			}
+
+			glBindTexture(GL_TEXTURE_2D, textureID);
+			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Texture failed to load at path: " << path << std::endl;
+			stbi_image_free(data);
+		}
+
+		return textureID;
 	}
 
 };
