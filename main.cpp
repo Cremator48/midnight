@@ -105,7 +105,7 @@ int main()
 	// 
 	// 
 	// 
-	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man5wt.fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	
 
 	// отрисовывать кадр при каждом обновлении экрана 
@@ -148,13 +148,14 @@ int main()
 		
 		shader.setMat4("model", model);
 
-		glm::vec3 lightPos(0.0f, -1.5f, 3.0f);
+		glm::vec3 lightPos(0.0f, -1.5f, 0.0f);
 
-//		lightPos.z = sin(glfwGetTime())* 5;
+		lightPos.z = sin(glfwGetTime()) * 2;
+		std::cout << lightPos.z << std::endl;
 
 		shader.setVec3("lightPos", lightPos);
 
-//		ourModel.Draw(shader);
+		ourModel.Render(shader);
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);

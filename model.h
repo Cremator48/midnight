@@ -20,6 +20,13 @@
 #include <map>
 #include <vector>
 
+
+#define POSITION_LOCATION    0
+#define TEX_COORD_LOCATION   1
+#define NORMAL_LOCATION      2
+#define BONE_ID_LOCATION     3
+#define BONE_WEIGHT_LOCATION 4
+
 class Model
 {
 public:
@@ -31,6 +38,30 @@ public:
 	~Model()
 	{
 
+	}
+
+	void Render(Shader shader)
+	{
+		glBindVertexArray(m_VAO);
+
+		for (int i = 0; i < m_Meshes.size(); i++)
+		{
+			unsigned int MaterialIndex = m_Meshes[i].MaterialIndex;
+
+			assert(MaterialIndex < m_Textures.size());
+
+			if (m_Textures[0].id)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				shader.setFloat("diffuse_texture", 0);
+
+				glBindVertexArray(m_VAO);
+				glBindTexture(GL_TEXTURE_2D, m_Textures[0].id);
+				glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, 0);
+				glBindVertexArray(0);
+			}
+
+		}
 	}
 
 private:
@@ -83,6 +114,14 @@ private:
 	};
 
 	struct Texture {
+
+		Texture()
+		{
+			id = 0;
+			type = std::string("diffuse");
+			path = std::string("./");
+		}
+
 		unsigned int id;
 		std::string type;
 		std::string path; // мы сохраняем путь к текстуре, чтобы сравнивать с другими текстурами
@@ -94,7 +133,7 @@ private:
 		POSITION_VERTEX_BUFFER = 1,
 		TEXCOORD_VEREX_BUFFER = 2,
 		NORMAL_VEREX_BUFFER = 3,
-		BONE_VEREX_BUFFER = 4,
+		BONE_VERTEX_BUFFER = 4,
 		NUM_BUFFERS = 5
 	};
 
@@ -134,7 +173,7 @@ private:
 	{
 		Clear();
 
-		directory = Filename.substr(0, Filename.find_last_of('/'));
+		directory = Filename.substr(0, Filename.find_last_of('/'));	// Строка хранящая путь до модели
 
 		glGenVertexArrays(1, &m_VAO);
 		glBindVertexArray(m_VAO);
@@ -181,7 +220,7 @@ private:
 		}
 		
 
-		// PopulateBuffers();
+		PopulateBuffers();
 
 	}
 
@@ -243,6 +282,15 @@ private:
 
 		LoadMeshBones(MeshIndex, paiMesh);
 
+		for (unsigned int i = 0; i < paiMesh->mNumFaces; i++)
+		{
+			const aiFace& Face = paiMesh->mFaces[i];
+
+			m_Indices.push_back(Face.mIndices[0]);
+			m_Indices.push_back(Face.mIndices[1]);
+			m_Indices.push_back(Face.mIndices[2]);
+		}
+		
 
 	}
 
@@ -295,23 +343,32 @@ private:
 
 	bool InitAllMaterials(const aiScene *pScene, std::string Filename)
 	{
+		
+
 		for (int i = 0; i < pScene->mNumMaterials; i++)
 		{
-			aiString path;
-			m_Textures[i].id = pScene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path, NULL, NULL, NULL, NULL, NULL);
+		
+			aiMaterial* material = pScene->mMaterials[i];
+
+			m_Textures = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+
 		}
+		return true;
 	}
 
-	std::vector<Texture> LoadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName)
+	std::vector<Texture> LoadMaterialTextures(aiMaterial *material, aiTextureType type, std::string typeName)
 	{
 		std::vector<Texture> textures;
 
-		for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+		for (unsigned int i = 0; i < material->GetTextureCount(type); i++)
 		{
-			aiString str;
-			mat->GetTexture(type, i, &str);
+			aiString str;		
+
+			material->GetTexture(type, i, &str);
 			Texture texture;
+
 			texture.id = TextureFromFile(str.C_Str(), this->directory);
+
 			texture.path = str.C_Str();
 			texture.type = typeName;
 			textures.push_back(texture);
@@ -323,13 +380,58 @@ private:
 
 	void PopulateBuffers()
 	{
+		glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POSITION_VERTEX_BUFFER]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_Positions[0]) * m_Positions.size(), &m_Positions[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(POSITION_LOCATION);
+		glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VEREX_BUFFER]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_TexCoords[0]) * m_TexCoords.size(), &m_TexCoords[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(TEX_COORD_LOCATION);
+		glVertexAttribPointer(TEX_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VEREX_BUFFER]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(NORMAL_LOCATION);
+		glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[BONE_VERTEX_BUFFER]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_Bones[0]) * m_Bones.size(), &m_Bones[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(BONE_ID_LOCATION);
+		glVertexAttribIPointer(BONE_ID_LOCATION, MAX_NUM_BONES_PER_VERTEX, GL_INT, sizeof(VertexBoneData), (const GLvoid*)0);
+
+		glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+		glVertexAttribPointer(BONE_WEIGHT_LOCATION, MAX_NUM_BONES_PER_VERTEX, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)offsetof(VertexBoneData, Weights));
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_Indices[0]) * m_Indices.size(), &m_Indices[0], GL_STATIC_DRAW);
 
 	}
+
+	
+
+	std::string fixPathSlash(std::string string)
+	{
+		while (string.find('\\') != string.npos)
+		{
+			int index = string.find('\\');
+			string.erase(index, 1);
+			string.insert(index, "/");
+		}
+
+		return string;
+	}	
+	// Заменяет все слеши с / на \
 
 	unsigned int TextureFromFile(const char* path, const std::string& directory)
 	{
 		std::string filename = std::string(path);
 		filename = directory + "/" + filename;
+
+		filename = fixPathSlash(filename);
+
+		// std::cout << "directory with changed filename = " << filename << std::endl;
+		
 
 		unsigned int textureID;
 		glGenTextures(1, &textureID);

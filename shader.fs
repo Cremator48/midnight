@@ -2,13 +2,16 @@
 out vec4 FragColor;
 
 in vec3 Normal;  
+in vec2 TexCoord;
 in vec3 FragPos;  
   
 uniform vec3 lightPos; 
+uniform sampler2D diffuse_texture;
 
 void main()
 {
-    vec3 lightColor = vec3(1.0);
+//    vec3 lightColor = vec3(1.0);
+    vec3 lightColor = texture(diffuse_texture, TexCoord.xy).xyz;
 
     
     float ambientStrength = 0.1;
