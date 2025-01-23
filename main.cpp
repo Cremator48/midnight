@@ -20,6 +20,7 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 void processInput(GLFWwindow* window);
 
@@ -36,6 +37,7 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
+int glDisplayBoneIndex = 0;
 
 int main()
 {
@@ -64,6 +66,7 @@ int main()
 		glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 		glfwSetCursorPosCallback(window, mouse_callback);
 		glfwSetScrollCallback(window, scroll_callback);
+		glfwSetKeyCallback(window, key_callback);
 	}
 
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -117,6 +120,8 @@ int main()
 	
 	glEnable(GL_DEPTH_TEST);
 
+	
+
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
@@ -147,11 +152,13 @@ int main()
 		shader.setMat4("view", view);
 		
 		shader.setMat4("model", model);
+		
+		shader.setInt("glDisplayBoneIndex", glDisplayBoneIndex);
 
 		glm::vec3 lightPos(0.0f, -1.5f, 0.0f);
 
 		lightPos.z = sin(glfwGetTime()) * 2;
-		std::cout << lightPos.z << std::endl;
+		
 
 		shader.setVec3("lightPos", lightPos);
 
@@ -233,3 +240,11 @@ float module(float a)
 {
 	return a < 0 ? -a : a;
 }
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
+		glDisplayBoneIndex = glDisplayBoneIndex + 1 ;
+	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
+		glDisplayBoneIndex = glDisplayBoneIndex - 1;
+};
