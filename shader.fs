@@ -27,7 +27,7 @@ void main()
     vec3 diffuse = diff * lightColor;
             
     vec3 result = (ambient + diffuse) * vec3(1.0);
- // FragColor = vec4(result, 1.0);
+  FragColor = vec4(result, 1.0);
 
 
     bool find = false;
@@ -38,13 +38,13 @@ void main()
         {
             if(Weights[i] >= 0.7)
             {
-                FragColor = vec4(1.0, 0.0, 0.0, 0.0) * Weights[i];
+   //             FragColor = vec4(1.0, 0.0, 0.0, 0.0) * Weights[i];
             } else if(Weights[i] >= 0.4)
             {
-                FragColor = vec4(0.0, 1.0, 0.0, 0.0) * Weights[i];
+   //             FragColor = vec4(0.0, 1.0, 0.0, 0.0) * Weights[i];
             } else if(Weights[i] >= 0.1)
             {
-                FragColor = vec4(1.0, 1.0, 0.0, 0.0) * Weights[i];
+    //            FragColor = vec4(1.0, 1.0, 0.0, 0.0) * Weights[i];
             }
 
             find = true;
@@ -54,6 +54,6 @@ void main()
 
     if(!find)
     {
-        FragColor =  texture(diffuse_texture, TexCoord.xy) * vec4(0.00001) + vec4(0.0, 0.0, 1.0, 0.0);
+     //   FragColor =  texture(diffuse_texture, TexCoord.xy) * vec4(0.00001) + vec4(0.0, 0.0, 1.0, 0.0);
     }
 } 

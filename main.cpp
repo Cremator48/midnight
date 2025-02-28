@@ -14,6 +14,7 @@
 #include "model.h"
 #include "camera.h"
 
+#include <iomanip>
 
 
 
@@ -120,8 +121,6 @@ int main()
 	
 	glEnable(GL_DEPTH_TEST);
 
-	
-
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
@@ -161,8 +160,36 @@ int main()
 		
 
 		shader.setVec3("lightPos", lightPos);
+		
+
+		std::vector<glm::mat4> Transforms;
+		ourModel.GetBoneTransforms(Transforms);
+
+		for (int i = 0; i < Transforms.size(); i++)
+		{
+			shader.setMat4("gBones["+std::to_string(i)+"]", Transforms[i]);
+		}
+
+		/*
+		
+		
+		for (int i = 0; i < Transforms.size(); i++)
+		{
+			std::cout << "gBones[" + std::to_string(i) + "]\n";
+			for (int b = 0; b < 3; b++)
+			{
+				 std::cout << Transforms[i][b].a << " " << Transforms[i][b].b << " " << Transforms[i][b].g << "\n";
+			}
+			std::cout << "\n";
+		}
+		
+		*/
+
+		
 
 		ourModel.Render(shader);
+
+
 
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);

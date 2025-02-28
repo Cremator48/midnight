@@ -35,9 +35,43 @@ public:
 
 	void Render(Shader shader);
 
+	void GetBoneTransforms(std::vector<glm::mat4>& Transforms);
+
+	
+
+	static glm::mat4 convertMat4(aiMatrix4x4 aiMatrix)
+	{
+		glm::mat4 finalMatrix;
+
+		finalMatrix[0][0] = aiMatrix.a1;
+		finalMatrix[1][0] = aiMatrix.a2;
+		finalMatrix[2][0] = aiMatrix.a3;
+		finalMatrix[3][0] = aiMatrix.a4;
+
+		finalMatrix[0][1] = aiMatrix.b1;
+		finalMatrix[1][1] = aiMatrix.b2;
+		finalMatrix[2][1] = aiMatrix.b3;
+		finalMatrix[3][1] = aiMatrix.b4;
+
+		finalMatrix[0][2] = aiMatrix.c1;
+		finalMatrix[1][2] = aiMatrix.c2;
+		finalMatrix[2][2] = aiMatrix.c3;
+		finalMatrix[3][2] = aiMatrix.c4;
+
+		finalMatrix[0][3] = aiMatrix.d1;
+		finalMatrix[1][3] = aiMatrix.d2;
+		finalMatrix[2][3] = aiMatrix.d3;
+		finalMatrix[3][3] = aiMatrix.d4;
+
+		return finalMatrix;
+	}
+
+
+
 private:
 
 #define MAX_NUM_BONES_PER_VERTEX 4
+
 
 	struct VertexBoneData
 	{
@@ -108,10 +142,33 @@ private:
 		NUM_BUFFERS = 5
 	};
 
+	struct BoneInfo
+	{
+		glm::mat4 OffsetMatrix;
+		glm::mat4 FinalTransformation;
+
+		BoneInfo(const glm::mat4& Offset)
+		{
+			OffsetMatrix = Offset;
+			FinalTransformation = glm::mat4(0.0f);
+		}
+		
+		BoneInfo(const aiMatrix4x4& Offset)
+		{
+			OffsetMatrix = convertMat4(Offset);
+			FinalTransformation = glm::mat4(0.0f);
+		}		
+	};
+
+	Assimp::Importer Importer;
+
+	const aiScene* pScene = NULL;
+
 	std::string directory;
 
 	std::vector<BasicMeshEntry> m_Meshes;
 	std::vector<Texture> m_Textures;
+	std::vector<BoneInfo> m_BoneInfo;
 
 	std::vector<glm::vec3> m_Positions;
 	std::vector<glm::vec3> m_Normals;
@@ -122,6 +179,9 @@ private:
 	std::map<std::string, unsigned int> m_BoneNameToIndexMap;
 
 	glm::mat4 m_Model = glm::mat4(1.0f);
+
+	
+
 	unsigned int m_VAO = 0;
 	unsigned int m_Buffers[NUM_BUFFERS] = { 0 };
 
@@ -157,6 +217,8 @@ private:
 	std::string fixPathSlash(std::string string);	// Заменяет все слеши с / на \
 
 	unsigned int TextureFromFile(const char* path, const std::string& directory);
+
+	void ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& ParentTransform);
 };
 
 

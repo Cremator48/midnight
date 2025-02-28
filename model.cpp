@@ -61,9 +61,7 @@ void Model::LoadModel(const std::string& Filename, unsigned int ASSIMP_FLAGS)
 	int sizeBuffersInElements = sizeof(m_Buffers) / sizeof(m_Buffers[0]);
 	glGenBuffers(sizeBuffersInElements, m_Buffers);
 
-	Assimp::Importer Importer;
-
-	const aiScene* pScene = Importer.ReadFile(Filename.c_str(), ASSIMP_FLAGS);
+	pScene = Importer.ReadFile(Filename.c_str(), ASSIMP_FLAGS);
 
 	if (pScene)
 	{
@@ -183,6 +181,12 @@ void Model::LoadMeshBones(unsigned int MeshIndex, const aiMesh* pMesh)
 void Model::LoadSingleBone(unsigned int MeshIndex, const aiBone* pBone)
 {
 	int BoneID = getBoneId(pBone);
+
+	if (BoneID == m_BoneInfo.size())
+	{
+		BoneInfo bi(pBone->mOffsetMatrix);
+		m_BoneInfo.push_back(bi);
+	}
 
 	for (unsigned int i = 0; i < pBone->mNumWeights; i++)
 	{
@@ -344,3 +348,35 @@ unsigned int Model::TextureFromFile(const char* path, const std::string& directo
 	return textureID;
 }
 
+void Model::GetBoneTransforms(std::vector<glm::mat4>& Transforms)
+{
+	Transforms.resize(m_BoneInfo.size());
+
+	glm::mat4  Identity(1.0f);
+
+	ReadNodeHierarchy(pScene->mRootNode, Identity);
+
+	for (unsigned int i = 0; i < m_BoneInfo.size(); i++) {
+		Transforms[i] = m_BoneInfo[i].FinalTransformation;
+	}
+}
+
+void Model::ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& ParentTransform)
+{
+	std::string NodeName(pNode->mName.data);
+
+	glm::mat4 NodeTransformation(convertMat4(pNode->mTransformation));
+
+//	printf("%s - \n", NodeName.c_str());
+
+	glm::mat4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+	if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {
+		unsigned int BoneIndex = m_BoneNameToIndexMap[NodeName];
+		m_BoneInfo[BoneIndex].FinalTransformation = GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
+	}
+
+	for (unsigned int i = 0; i < pNode->mNumChildren; i++) {
+		ReadNodeHierarchy(pNode->mChildren[i], GlobalTransformation);
+	}
+}	
