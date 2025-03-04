@@ -14,6 +14,8 @@ void Model::Render(Shader shader)
 {
 	glBindVertexArray(m_VAO);
 
+	
+
 	for (int i = 0; i < m_Meshes.size(); i++)
 	{
 		unsigned int MaterialIndex = m_Meshes[i].MaterialIndex;
@@ -66,6 +68,8 @@ void Model::LoadModel(const std::string& Filename, unsigned int ASSIMP_FLAGS)
 	if (pScene)
 	{
 		InitFromScene(pScene, Filename);
+		m_GlobalInverseTransform = convertMat4(pScene->mRootNode->mTransformation);
+		m_GlobalInverseTransform = glm::inverse(m_GlobalInverseTransform);
 	}
 	else
 	{
@@ -79,6 +83,15 @@ void Model::InitFromScene(const aiScene* pScene, const std::string& Filename)
 {
 	m_Meshes.resize(pScene->mNumMeshes);
 	m_Textures.resize(pScene->mNumMaterials);
+
+	if (pScene->HasAnimations())
+	{
+		std::cout << "Animations detected!\n";
+	}
+	else
+	{
+		std::cout << "Animations NOT detected!\n";
+	}
 
 	unsigned int NumVertices = 0;
 	unsigned int NumIndices = 0;
@@ -99,7 +112,6 @@ void Model::InitFromScene(const aiScene* pScene, const std::string& Filename)
 
 
 	PopulateBuffers();
-
 }
 
 void Model::CountVerticesAndIndices(const aiScene* pScene, unsigned int& NumVertices, unsigned int& NumIndices)
@@ -296,14 +308,29 @@ std::string Model::fixPathSlash(std::string string)
 	return string;
 }
 
-unsigned int Model::TextureFromFile(const char* path, const std::string& directory)
+unsigned int Model::TextureFromFile(const char* innerPath, const std::string& directory)
 {
-	std::string filename = std::string(path);
+	std::string filename = std::string(innerPath);
+
+	// Рабочий код
+	/*
+	
+	std::cout << "1. filename = " << filename << std::endl;
+
 	filename = directory + "/" + filename;
+
+	std::cout << "directory + / + filename = " << filename << std::endl;
 
 	filename = fixPathSlash(filename);
 
-	// std::cout << "directory with changed filename = " << filename << std::endl;
+	std::cout << "directory with changed filename = " << filename << std::endl;
+	
+	*/
+
+	filename = directory + '/' + filename;
+
+	filename = fixPathSlash(filename);
+	std::cout << "directory with changed filename = " << filename << std::endl;
 
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -341,29 +368,94 @@ unsigned int Model::TextureFromFile(const char* path, const std::string& directo
 	}
 	else
 	{
-		std::cout << "Texture failed to load at path: " << path << std::endl;
+		std::cout << "Texture failed to load at path: " << filename << std::endl;
 		stbi_image_free(data);
 	}
 
 	return textureID;
 }
 
-void Model::GetBoneTransforms(std::vector<glm::mat4>& Transforms)
+void Model::GetBoneTransforms(float TimeInSeconds,  std::vector<glm::mat4>& Transforms)
 {
 	Transforms.resize(m_BoneInfo.size());
 
 	glm::mat4  Identity(1.0f);
 
-	ReadNodeHierarchy(pScene->mRootNode, Identity);
+	float TicksPerSecond = (float)(pScene->mAnimations[0]->mTicksPerSecond != 0 ? pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+	float TimeInTicks = TimeInSeconds * TicksPerSecond;
+	float AnimationTimePerTicks = fmod(TimeInTicks, (float)pScene->mAnimations[0]->mDuration);
+
+	ReadNodeHierarchy(AnimationTimePerTicks, pScene->mRootNode, Identity);
 
 	for (unsigned int i = 0; i < m_BoneInfo.size(); i++) {
 		Transforms[i] = m_BoneInfo[i].FinalTransformation;
 	}
 }
 
-void Model::ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& ParentTransform)
+void Model::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+	if (pNodeAnim->mNumScalingKeys == 1)
+	{
+		Out = pNodeAnim->mScalingKeys[0].mValue;
+		return;
+	}
+
+	unsigned int ScalingIndex = FindScaling(AnimationTimeTicks, pNodeAnim);
+	unsigned int NextScalingIndex = ScalingIndex + 1;
+	assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+	float t1 = (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime;
+	float t2 = (float)pNodeAnim->mScalingKeys[NextScalingIndex].mTime;
+	float DeltaTime = t2 - t1;
+	float Factor = (AnimationTimeTicks - (float)t1) / DeltaTime;
+	assert(Factor > = 0.0f && Factor <= 1.0f);
+	const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
+	const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
+	aiVector3D Delta = End - Start;
+	Out = Start + Factor * Delta;
+
+}
+
+unsigned int Model::FindScaling(float AnimationTimeTicks, const aiNodeAnim* pNodeAnim)
+{
+	assert(pNodeAnim->mNumScalingKeys > 0);
+
+	for (unsigned int i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
+	{
+		float t = (float)pNodeAnim->mScalingKeys[i + 1].mTime;
+		if (AnimationTimeTicks < t)
+		{
+			return i;
+		}
+	}
+
+	return 0;
+}
+
+void Model::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform)
 {
 	std::string NodeName(pNode->mName.data);
+
+	const aiAnimation* pAnimation = pScene->mAnimations[0];
+
+	const aiNodeAnim* pNodeAnim = FindNodeAnim(pAnimation, NodeName);
+
+	if (pNodeAnim)
+	{
+		aiVector3D Scaling;
+		CalcInterpolatedScaling(Scaling, AnimationTimeTicks, pNodeAnim);
+
+		glm::vec3 glmScaling = glm::vec3(Scaling.x, Scaling.y, Scaling.z);
+		glm::mat4 ScalingM(1.0f);
+		ScalingM = glm::scale(ScalingM, glmScaling);
+
+		std::cout << pNode->mName.C_Str() << "\n";
+		for (int i = 0; i < 3; i++)
+		{
+			std::cout << ScalingM[i][0] << " " << ScalingM[i][1] << " " << ScalingM[0][2] << " " << ScalingM[0][3] << "\n";
+		}
+		std::cout << "\n";
+		
+	}
 
 	glm::mat4 NodeTransformation(convertMat4(pNode->mTransformation));
 
@@ -373,10 +465,25 @@ void Model::ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& ParentTransf
 
 	if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {
 		unsigned int BoneIndex = m_BoneNameToIndexMap[NodeName];
-		m_BoneInfo[BoneIndex].FinalTransformation = GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
+		m_BoneInfo[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
 	}
 
 	for (unsigned int i = 0; i < pNode->mNumChildren; i++) {
-		ReadNodeHierarchy(pNode->mChildren[i], GlobalTransformation);
+		ReadNodeHierarchy(AnimationTimeTicks, pNode->mChildren[i], GlobalTransformation);
 	}
 }	
+
+const aiNodeAnim* Model::FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName)
+{
+	for (unsigned int i = 0; i < pAnimation->mNumChannels; i++)
+	{
+		const aiNodeAnim* pNodeAnim = pAnimation->mChannels[i];
+
+		if ((std::string)pNodeAnim->mNodeName.data == NodeName)
+		{
+			return pNodeAnim;
+		}
+	}
+
+	return NULL;
+}

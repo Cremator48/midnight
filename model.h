@@ -20,6 +20,9 @@
 #include <map>
 #include <vector>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #define POSITION_LOCATION    0
 #define TEX_COORD_LOCATION   1
 #define NORMAL_LOCATION      2
@@ -35,14 +38,12 @@ public:
 
 	void Render(Shader shader);
 
-	void GetBoneTransforms(std::vector<glm::mat4>& Transforms);
-
+	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
 	
 
 	static glm::mat4 convertMat4(aiMatrix4x4 aiMatrix)
 	{
 		glm::mat4 finalMatrix;
-
 		finalMatrix[0][0] = aiMatrix.a1;
 		finalMatrix[1][0] = aiMatrix.a2;
 		finalMatrix[2][0] = aiMatrix.a3;
@@ -63,15 +64,41 @@ public:
 		finalMatrix[2][3] = aiMatrix.d3;
 		finalMatrix[3][3] = aiMatrix.d4;
 
+		/*
+		glm::mat4 finalMatrix;
+
+		finalMatrix[0][0] = aiMatrix.a1;
+		finalMatrix[0][1] = aiMatrix.a2;
+		finalMatrix[0][2] = aiMatrix.a3;
+		finalMatrix[0][3] = aiMatrix.a4;
+
+		finalMatrix[1][0] = aiMatrix.b1;
+		finalMatrix[1][1] = aiMatrix.b2;
+		finalMatrix[1][2] = aiMatrix.b3;
+		finalMatrix[1][3] = aiMatrix.b4;
+
+		finalMatrix[2][0] = aiMatrix.c1;
+		finalMatrix[2][1] = aiMatrix.c2;
+		finalMatrix[2][2] = aiMatrix.c3;
+		finalMatrix[2][3] = aiMatrix.c4;
+
+		finalMatrix[3][0] = aiMatrix.d1;
+		finalMatrix[3][1] = aiMatrix.d2;
+		finalMatrix[3][2] = aiMatrix.d3;
+		finalMatrix[3][3] = aiMatrix.d4;
+		*/
+		
+
 		return finalMatrix;
 	}
 
-
+	
 
 private:
 
 #define MAX_NUM_BONES_PER_VERTEX 4
 
+	
 
 	struct VertexBoneData
 	{
@@ -206,7 +233,6 @@ private:
 
 	int getBoneId(const aiBone* pBone);	// Возвращает уникальный ID кости, если его нет в базе, создёт и возвращает
 
-
 	bool InitAllMaterials(const aiScene* pScene, std::string Filename);
 
 	std::vector<Texture> LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string typeName);
@@ -218,7 +244,15 @@ private:
 
 	unsigned int TextureFromFile(const char* path, const std::string& directory);
 
-	void ReadNodeHierarchy(const aiNode* pNode, const glm::mat4& ParentTransform);
+	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
+
+	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName);
+
+	void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
+
+	glm::mat4 m_GlobalInverseTransform;
+
+	unsigned int FindScaling(float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
 };
 
 

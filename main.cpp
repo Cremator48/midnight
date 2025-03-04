@@ -29,6 +29,8 @@ void processInput(GLFWwindow* window);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+
+
 // Константы
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
@@ -43,6 +45,10 @@ int glDisplayBoneIndex = 0;
 int main()
 {
 	setlocale(LC_ALL, "Russian");
+
+	long long StartTimeMillis = 0;
+
+	StartTimeMillis = glfwGetTime() * 1000;
 
 	// glfw: инициализация и конфигурирование
 	{
@@ -109,7 +115,8 @@ int main()
 	// 
 	// 
 	// 
-	Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man5wt.fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	//   Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man5wt.fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	     Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/anim2/animman2withReletivePath.fbx_Scene1fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	
 
 	// отрисовывать кадр при каждом обновлении экрана 
@@ -161,29 +168,20 @@ int main()
 
 		shader.setVec3("lightPos", lightPos);
 		
+		long long CurrentTimeMillis = glfwGetTime() * 1000;
+		float AnimationTimeSec = ((float)(CurrentTimeMillis - StartTimeMillis)) / 1000.0f;
+
+		std::cout << AnimationTimeSec << "\n";
 
 		std::vector<glm::mat4> Transforms;
-		ourModel.GetBoneTransforms(Transforms);
+		ourModel.GetBoneTransforms(StartTimeMillis, Transforms);
 
 		for (int i = 0; i < Transforms.size(); i++)
 		{
 			shader.setMat4("gBones["+std::to_string(i)+"]", Transforms[i]);
 		}
 
-		/*
 		
-		
-		for (int i = 0; i < Transforms.size(); i++)
-		{
-			std::cout << "gBones[" + std::to_string(i) + "]\n";
-			for (int b = 0; b < 3; b++)
-			{
-				 std::cout << Transforms[i][b].a << " " << Transforms[i][b].b << " " << Transforms[i][b].g << "\n";
-			}
-			std::cout << "\n";
-		}
-		
-		*/
 
 		
 
