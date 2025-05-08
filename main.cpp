@@ -29,6 +29,7 @@ void processInput(GLFWwindow* window);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+int plusMatrix = 32;
 
 
 // Константы
@@ -116,7 +117,15 @@ int main()
 	// 
 	// 
 	//   Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man5wt.fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	     Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/anim2/animman2withReletivePath.fbx_Scene1fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	
+		
+	
+	
+	//	 Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/snake/snake2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);
+	//	 Model ourModel("C:/Users/tyuri/Download/untitled.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);
+		 Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/simple_men (3).fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);
+	//	 Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/untitled.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	
 	
 
 	// отрисовывать кадр при каждом обновлении экрана 
@@ -127,6 +136,8 @@ int main()
 
 	
 	glEnable(GL_DEPTH_TEST);
+
+	int firstFrame = 1;
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -171,24 +182,46 @@ int main()
 		long long CurrentTimeMillis = glfwGetTime() * 1000;
 		float AnimationTimeSec = ((float)(CurrentTimeMillis - StartTimeMillis)) / 1000.0f;
 
-		std::cout << AnimationTimeSec << "\n";
+//		std::cout << AnimationTimeSec << "\n";
 
 		std::vector<glm::mat4> Transforms;
-		ourModel.GetBoneTransforms(StartTimeMillis, Transforms);
+		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms);
+
+		
 
 		for (int i = 0; i < Transforms.size(); i++)
 		{
-			shader.setMat4("gBones["+std::to_string(i)+"]", Transforms[i]);
+			shader.setMat4("gBones["+std::to_string(i)+"]", Transforms[i]);	
 		}
+	
+		if (firstFrame)
+		{
 
-		
+			/*std::cout << "\nourModel.m_BoneNameToIndexMap\nNum of bones: " << ourModel.m_BoneNameToIndexMap.size() << "\n";
+			std::cout << "\nTransforms.size() = " << Transforms.size() << "\n";
 
-		
+			for (auto& element : ourModel.m_BoneNameToIndexMap)
+			{
+				std::cout << element.first << " " << element.second << "\n";
+			}
+			
+			std::cout << "\nourModel.m_BoneInfo\nNum of bones: " << ourModel.m_BoneInfo.size() << "\n";
+			int iterator = 0;
+			for (auto& element : ourModel.m_BoneInfo)
+			{
+				std::cout << element.name << " " << iterator << "\n";
+				iterator++;
+			}
+*/
+
+		}
+		firstFrame = 0;
 
 		ourModel.Render(shader);
 
+		
 
-
+		
 		// glfw: обмен содержимым переднего и заднего буферов. Опрос событий ввода\вывода (была ли нажата/отпущена кнопка, перемещен курсор мыши и т.п.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -269,7 +302,15 @@ float module(float a)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
-		glDisplayBoneIndex = glDisplayBoneIndex + 1 ;
+	{
+		plusMatrix = plusMatrix + 1;
+		std::cout << plusMatrix << "\n";
+	}
+		
 	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
-		glDisplayBoneIndex = glDisplayBoneIndex - 1;
+	{
+		plusMatrix = plusMatrix - 1;
+		std::cout << plusMatrix << "\n";
+	}
+
 };

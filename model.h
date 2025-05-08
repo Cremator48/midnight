@@ -34,15 +34,50 @@ class Model
 public:
 	Model(const std::string& Filename, unsigned int ASSIMP_FLAGS);
 
+	struct NeedNode
+	{
+		aiNode* node;
+		bool needOrNot;
+	};
+
 	~Model();
 
 	void Render(Shader shader);
 
 	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
 	
+	static void printMatrix(glm::mat4 matrix);
+	static aiMatrix4x4 convertMat4(glm::mat4 glmMatrix)
+	{
 
+		aiMatrix4x4 finalMatrix;
+		glmMatrix[0][0] = finalMatrix.a1;
+		glmMatrix[1][0] = finalMatrix.a2;
+		glmMatrix[2][0] = finalMatrix.a3;
+		glmMatrix[3][0] = finalMatrix.a4;
+
+		glmMatrix[0][1] = finalMatrix.b1;
+		glmMatrix[1][1] = finalMatrix.b2;
+		glmMatrix[2][1] = finalMatrix.b3;
+		glmMatrix[3][1] = finalMatrix.b4;
+
+		glmMatrix[0][2] = finalMatrix.c1;
+		glmMatrix[1][2] = finalMatrix.c2;
+		glmMatrix[2][2] = finalMatrix.c3;
+		glmMatrix[3][2] = finalMatrix.c4;
+
+		glmMatrix[0][3] = finalMatrix.d1;
+		glmMatrix[1][3] = finalMatrix.d2;
+		glmMatrix[2][3] = finalMatrix.d3;
+		glmMatrix[3][3] = finalMatrix.d4;
+
+		return finalMatrix;
+	}
+
+	
 	static glm::mat4 convertMat4(aiMatrix4x4 aiMatrix)
 	{
+		
 		glm::mat4 finalMatrix;
 		finalMatrix[0][0] = aiMatrix.a1;
 		finalMatrix[1][0] = aiMatrix.a2;
@@ -64,41 +99,95 @@ public:
 		finalMatrix[2][3] = aiMatrix.d3;
 		finalMatrix[3][3] = aiMatrix.d4;
 
+		return finalMatrix;
+	}
+
+	static glm::mat4 convertMat4(aiMatrix3x3 aiMatrix)
+	{
+		
+		glm::mat4 finalMatrix;
+		finalMatrix[0][0] = aiMatrix.a1;
+		finalMatrix[1][0] = aiMatrix.a2;
+		finalMatrix[2][0] = aiMatrix.a3;
+		finalMatrix[3][0] = 0.0f;
+
+		finalMatrix[0][1] = aiMatrix.b1;
+		finalMatrix[1][1] = aiMatrix.b2;
+		finalMatrix[2][1] = aiMatrix.b3;
+		finalMatrix[3][1] = 0.0f;
+
+		finalMatrix[0][2] = aiMatrix.c1;
+		finalMatrix[1][2] = aiMatrix.c2;
+		finalMatrix[2][2] = aiMatrix.c3;
+		finalMatrix[3][2] = 0.0f;
+
+		finalMatrix[0][3] = 0.0f;
+		finalMatrix[1][3] = 0.0f;
+		finalMatrix[2][3] = 0.0f;
+		finalMatrix[3][3] = 1.0f;
+		
+		
 		/*
 		glm::mat4 finalMatrix;
 
 		finalMatrix[0][0] = aiMatrix.a1;
 		finalMatrix[0][1] = aiMatrix.a2;
 		finalMatrix[0][2] = aiMatrix.a3;
-		finalMatrix[0][3] = aiMatrix.a4;
+		finalMatrix[0][3] = 0.0f;
 
 		finalMatrix[1][0] = aiMatrix.b1;
 		finalMatrix[1][1] = aiMatrix.b2;
 		finalMatrix[1][2] = aiMatrix.b3;
-		finalMatrix[1][3] = aiMatrix.b4;
+		finalMatrix[1][3] = 0.0f;
 
 		finalMatrix[2][0] = aiMatrix.c1;
 		finalMatrix[2][1] = aiMatrix.c2;
 		finalMatrix[2][2] = aiMatrix.c3;
-		finalMatrix[2][3] = aiMatrix.c4;
+		finalMatrix[2][3] = 0.0f;
 
-		finalMatrix[3][0] = aiMatrix.d1;
-		finalMatrix[3][1] = aiMatrix.d2;
-		finalMatrix[3][2] = aiMatrix.d3;
-		finalMatrix[3][3] = aiMatrix.d4;
+		finalMatrix[3][0] = 0.0f;
+		finalMatrix[3][1] = 0.0f;
+		finalMatrix[3][2] = 0.0f;
+		finalMatrix[3][3] = 1.0f;
 		*/
-		
+
 
 		return finalMatrix;
+		
 	}
 
-	
+	std::map<std::string, unsigned int> m_BoneNameToIndexMap;
+
+	unsigned int NodesCounter = 0;
+
+	struct BoneInfo
+	{
+		std::string name;
+		glm::mat4 OffsetMatrix;
+		glm::mat4 FinalTransformation;
+
+		BoneInfo(const aiBone& pBone)
+		{
+			OffsetMatrix = convertMat4(pBone.mOffsetMatrix);
+			FinalTransformation = glm::mat4(1.0f);
+			name = pBone.mName.C_Str();
+		}
+	};
+
+	std::vector<BoneInfo> m_BoneInfo;
+
+	void MultiplyMatrix(aiNode* node, aiMatrix4x4& matrix);
+
+	std::vector<NeedNode> nodeArray;
 
 private:
 
 #define MAX_NUM_BONES_PER_VERTEX 4
 
 	
+
+	void parseNode(aiNode* node);
+
 
 	struct VertexBoneData
 	{
@@ -169,23 +258,7 @@ private:
 		NUM_BUFFERS = 5
 	};
 
-	struct BoneInfo
-	{
-		glm::mat4 OffsetMatrix;
-		glm::mat4 FinalTransformation;
-
-		BoneInfo(const glm::mat4& Offset)
-		{
-			OffsetMatrix = Offset;
-			FinalTransformation = glm::mat4(0.0f);
-		}
-		
-		BoneInfo(const aiMatrix4x4& Offset)
-		{
-			OffsetMatrix = convertMat4(Offset);
-			FinalTransformation = glm::mat4(0.0f);
-		}		
-	};
+	
 
 	Assimp::Importer Importer;
 
@@ -195,7 +268,7 @@ private:
 
 	std::vector<BasicMeshEntry> m_Meshes;
 	std::vector<Texture> m_Textures;
-	std::vector<BoneInfo> m_BoneInfo;
+
 
 	std::vector<glm::vec3> m_Positions;
 	std::vector<glm::vec3> m_Normals;
@@ -203,7 +276,7 @@ private:
 	std::vector<unsigned int> m_Indices;
 	std::vector<VertexBoneData> m_Bones; // Массив данных о КАЖДОЙ вершине, а конкретней о костях которые на неё влияют
 
-	std::map<std::string, unsigned int> m_BoneNameToIndexMap;
+	
 
 	glm::mat4 m_Model = glm::mat4(1.0f);
 
@@ -244,9 +317,9 @@ private:
 
 	unsigned int TextureFromFile(const char* path, const std::string& directory);
 
-	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
+//	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
 
-	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string NodeName);
+	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& NodeName);
 
 	void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
 
