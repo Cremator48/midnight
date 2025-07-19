@@ -44,7 +44,7 @@ public:
 
 	void Render(Shader shader);
 
-	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, int numOfAnimation);
+	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, float factor);
 
 	int maxNumOfAnimations;
 	
@@ -186,6 +186,8 @@ public:
 
 	std::vector<NeedNode> nodeArray;
 
+//	float FactorOfBlendAnim = 0.5f;
+
 private:
 
 #define MAX_NUM_BONES_PER_VERTEX 4
@@ -321,6 +323,8 @@ private:
 	unsigned int TextureFromFile(const char* path, const std::string& directory);
 
 	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfAnimation);
+
+	void BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float SecondAnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfFirstAnimation, int numOfSecondAnimation, float FactorOfBlendAnim);
 
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& NodeName);
 

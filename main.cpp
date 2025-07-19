@@ -40,8 +40,7 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 int glDisplayBoneIndex = 0;
 
-int numOfAnimation = 0;
-int maxNumOfAnimation = 0;
+float FactorOfBlendAnim = 0.0f;
 
 int main()
 {
@@ -115,9 +114,9 @@ int main()
 	// 6. Настройка вершинных атрибутов
 	
 	
-    Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/simple-man-with-3-anim-with-texture.gltf", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);	
+    Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/simple-man-with-6-anim-with-texture.gltf", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);	
 
-	maxNumOfAnimation = ourModel.maxNumOfAnimations;
+//	maxNumOfAnimation = ourModel.maxNumOfAnimations;
 //	std::cout << "maxNumOfAnimation: " << maxNumOfAnimation << "\n";
 
 	// отрисовывать кадр при каждом обновлении экрана 
@@ -182,7 +181,7 @@ int main()
 	//	std::cout << "AnimationTimeSec: " << AnimationTimeSec << "\n";
 
 		std::vector<glm::mat4> Transforms;
-		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms, numOfAnimation);
+		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms, FactorOfBlendAnim);
 
 
 		for (int i = 0; i < Transforms.size(); i++)
@@ -228,6 +227,19 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && /*numOfAnimation > 0*/ FactorOfBlendAnim > 0)
+	{
+		FactorOfBlendAnim = FactorOfBlendAnim - 0.01f;
+		//	numOfAnimation = numOfAnimation - 1;
+		//	std::cout << numOfAnimation;
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && /*numOfAnimation < maxNumOfAnimation-1*/ FactorOfBlendAnim < 1)
+	{
+		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
+		//	numOfAnimation = numOfAnimation + 1;
+		//	std::cout << numOfAnimation;
+	}
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция
@@ -274,16 +286,8 @@ float module(float a)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS && numOfAnimation > 0)
-	{
-		numOfAnimation = numOfAnimation - 1;
-	//	std::cout << numOfAnimation;
-	}
-	if (key == GLFW_KEY_UP && action == GLFW_PRESS && numOfAnimation < maxNumOfAnimation-1)
-	{
-		numOfAnimation = numOfAnimation + 1;
-	//	std::cout << numOfAnimation;
-	}
+	
+
 	
 
 };

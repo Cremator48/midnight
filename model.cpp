@@ -105,6 +105,34 @@ void Model::LoadModel(const std::string& Filename, unsigned int ASSIMP_FLAGS)
 		m_GlobalInverseTransform = convertMat4(pScene->mRootNode->mTransformation);
 		m_GlobalInverseTransform = glm::inverse(m_GlobalInverseTransform);
 		InitFromScene(pScene, Filename);
+
+
+		glm::mat4 glmMatrix(1.0f);
+		aiMatrix4x4 aiMatrix;
+		aiMatrix.a1 = glmMatrix[0][0];
+		aiMatrix.a2 = glmMatrix[1][0];
+		aiMatrix.a3 = glmMatrix[2][0];
+		aiMatrix.a4 = glmMatrix[3][0];
+
+		aiMatrix.b1 = glmMatrix[0][1];
+		aiMatrix.b2 = glmMatrix[1][1];
+		aiMatrix.b3 = glmMatrix[2][1];
+		aiMatrix.b4 = glmMatrix[3][1];
+
+		aiMatrix.c1 = glmMatrix[0][2];
+		aiMatrix.c2 = glmMatrix[1][2];
+		aiMatrix.c3 = glmMatrix[2][2];
+		aiMatrix.c4 = glmMatrix[3][2];
+
+		aiMatrix.d1 = glmMatrix[0][3];
+		aiMatrix.d2 = glmMatrix[1][3];
+		aiMatrix.d3 = glmMatrix[2][3];
+		aiMatrix.d4 = glmMatrix[3][3];
+
+		printf("%f   %f   %f   %f\n", aiMatrix.a1, aiMatrix.a2, aiMatrix.a3, aiMatrix.a4);
+		printf("%f   %f   %f   %f\n", aiMatrix.b1, aiMatrix.b2, aiMatrix.b3, aiMatrix.b4);
+		printf("%f   %f   %f   %f\n", aiMatrix.c1, aiMatrix.c2, aiMatrix.c3, aiMatrix.c4);
+		printf("%f   %f   %f   %f\n", aiMatrix.d1, aiMatrix.d2, aiMatrix.d3, aiMatrix.d4);
 	}
 	else
 	{
@@ -430,24 +458,28 @@ unsigned int Model::TextureFromFile(const char* innerPath, const std::string& di
 	return textureID;
 }
 
-void Model::GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, int numOfAnimation)
+void Model::GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, float factor)
 {
 	glm::mat4 Identity(1.0f);
 
-	float TicksPerSecond = (float)(pScene->mAnimations[numOfAnimation]->mTicksPerSecond != 0 ? pScene->mAnimations[numOfAnimation]->mTicksPerSecond : 25.0f);
+	float firstTicksPerSecond = (float)(pScene->mAnimations[1]->mTicksPerSecond != 0 ? pScene->mAnimations[1]->mTicksPerSecond : 25.0f);
+	float secondTicksPerSecond = (float)(pScene->mAnimations[2]->mTicksPerSecond != 0 ? pScene->mAnimations[2]->mTicksPerSecond : 25.0f);
 
 	// Текущее время в тиках
-	float TimeInTicks = TimeInSeconds * TicksPerSecond;
+	float firstTimeInTicks = TimeInSeconds * firstTicksPerSecond;
+	float secondTimeInTicks = TimeInSeconds * secondTicksPerSecond;
 //	printf("TimeInTicks: %f\n", TimeInTicks);
 
 //	printf("Duraiton: %f\n", (float)pScene->mAnimations[numOfAnimation]->mDuration);
 
 	// Остаток от деления текущего времени в тиках на длительность анимации в тиках
 	// Эта переменная содержит текущее время для анимации в тиках. После завершения анимации - анимация начинается сначала
-	float AnimationTimeTicks = fmod(TimeInTicks, (float)pScene->mAnimations[numOfAnimation]->mDuration);
+	float firstAnimationTimeTicks = fmod(firstTimeInTicks, (float)pScene->mAnimations[1]->mDuration-10);
+	float secondAnimationTimeTicks = fmod(secondTimeInTicks, (float)pScene->mAnimations[2]->mDuration-10);
 //	printf("AnimationTimeTicks: %f\n", AnimationTimeTicks);
 
-	ReadNodeHierarchy(AnimationTimeTicks, pScene->mRootNode, Identity, numOfAnimation);
+//	ReadNodeHierarchy(AnimationTimeTicks, pScene->mRootNode, Identity, numOfAnimation);
+	BlendAnimationReadNodeHierarchy(firstAnimationTimeTicks, secondAnimationTimeTicks, pScene->mRootNode, Identity, 1, 2, factor);
 	Transforms.resize(m_BoneInfo.size());
 
 	for (unsigned int i = 0; i < m_BoneInfo.size(); i++) {
@@ -617,6 +649,195 @@ void Model::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, con
 	}
 
 
+
+}
+
+void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float SecondAnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfFirstAnimation, int numOfSecondAnimation, float FactorOfBlendAnim)
+{
+	std::string NodeName(pNode->mName.data);
+
+	const aiAnimation* pFirstAnimation = pScene->mAnimations[numOfFirstAnimation];
+
+	const aiAnimation* pSecondAnimation = pScene->mAnimations[numOfSecondAnimation];
+
+	glm::mat4 NodeTransformation = convertMat4(pNode->mTransformation);
+
+	// Первая анимция этого конкретного узла
+	const aiNodeAnim* pNodeFirstAnim = FindNodeAnim(pFirstAnimation, NodeName);
+
+	// Вторая анимация этого конкретного узла
+	const aiNodeAnim* pNodeSecondAnim = FindNodeAnim(pSecondAnimation, NodeName);
+
+	// Возможны 3 варианта:
+	// [1] Обе анимации содержат ключи анимции для этого узла;
+	// [2] Первая анимация содержит анимацию для этого узла, а вторая анимация не содержит;
+	// [3] Первая анимация не содержит анимацию для этого узла, а вторая содержит.
+
+	if (pNodeFirstAnim && pNodeSecondAnim) /*[0]*/
+	{
+		aiVector3D firstScaling, secondScaling;
+		CalcInterpolatedScaling(firstScaling, FirstAnimationTimeTicks, pNodeFirstAnim);
+		CalcInterpolatedScaling(secondScaling, SecondAnimationTimeTicks, pNodeSecondAnim);
+
+		glm::vec3 glmFirstScaling(firstScaling.x, firstScaling.y, firstScaling.z);
+		glm::vec3 glmSecondScaling(secondScaling.x, secondScaling.y, secondScaling.z);
+
+		// float Factor = степень перехода от pos1 к pos2. Лежит между 0 и 1;
+		// vec3 Delta = pos2 - pos1; 
+		// Интерполированный vec3 = pos1 + Factor * Delta; 
+
+		
+		glm::vec3 DeltaScaling = glmSecondScaling - glmFirstScaling;
+		glm::vec3 ResultScaling = glmFirstScaling + FactorOfBlendAnim * DeltaScaling;
+
+		glm::mat4 ScalingM(1.0f);
+		ScalingM = glm::scale(ScalingM, ResultScaling);
+
+		aiQuaternion firstRotationQ, secondRotationQ, resultRotationQ;
+		CalcInterpolatedRotation(firstRotationQ, FirstAnimationTimeTicks, pNodeFirstAnim);
+		CalcInterpolatedRotation(secondRotationQ, SecondAnimationTimeTicks, pNodeSecondAnim);
+
+
+		aiQuaternion::Interpolate(resultRotationQ, firstRotationQ, secondRotationQ, FactorOfBlendAnim);
+
+		glm::mat4 RotationM = glm::mat4(convertMat4(resultRotationQ.GetMatrix()));
+
+
+
+		aiVector3D firstTranslation, secondTranslation;
+		glm::vec3 firstTranslationGLM, secondTranslationGLM, resultTranslation;
+		CalcInterpolatedPosition(firstTranslation, FirstAnimationTimeTicks, pNodeFirstAnim);
+		CalcInterpolatedPosition(secondTranslation, SecondAnimationTimeTicks, pNodeSecondAnim);
+
+		// vec3 Delta = pos2 - pos1; 
+		// Интерполированный vec3 = pos1 + Factor * Delta; 
+
+		firstTranslationGLM = glm::vec3(firstTranslation.x, firstTranslation.y, firstTranslation.z);
+		secondTranslationGLM = glm::vec3(secondTranslation.x, secondTranslation.y, secondTranslation.z);
+		glm::vec3 DeltaTranslation = secondTranslationGLM - firstTranslationGLM;
+		resultTranslation = firstTranslationGLM + FactorOfBlendAnim * DeltaTranslation;
+
+		glm::mat4 TranslationM(1.0f);
+		TranslationM = glm::translate(TranslationM, resultTranslation);
+
+		NodeTransformation = TranslationM * RotationM * ScalingM;
+	}
+	else if(!pNodeFirstAnim && pNodeSecondAnim) //[1]
+	{
+		aiMatrix4x4 pTransform = pNode->mTransformation;
+		aiVector3D pTranformScaling, pTransformPosition;
+		aiQuaternion pTranformQuat;
+		pTransform.Decompose(pTranformScaling, pTranformQuat, pTransformPosition);
+
+
+		// Расчёт интерполяции (pNodeSecondAnim) анимированного узла
+		aiVector3D Scaling;
+		CalcInterpolatedScaling(Scaling, SecondAnimationTimeTicks, pNodeSecondAnim);
+		glm::vec3 glmScaling(Scaling.x, Scaling.y, Scaling.z);
+		
+		// float Factor = степень перехода от pos1 к pos2. Лежит между 0 и 1;
+		// vec3 Delta = pos2 - pos1; 
+		// Интерполированный vec3 = pos1 + Factor * Delta; 
+
+		// Интерполяция между анимированным и не анимированным положением
+
+		glm::vec3 DeltaScaling = glmScaling - glm::vec3(pTranformScaling.x, pTranformScaling.y, pTranformScaling.z);
+		glm::vec3 resultScaling = glmScaling + FactorOfBlendAnim * DeltaScaling;
+
+		glm::mat4 ScalingM(1.0f);
+		ScalingM = glm::scale(ScalingM, resultScaling);
+
+
+
+		aiQuaternion RotationQ;
+		CalcInterpolatedRotation(RotationQ, SecondAnimationTimeTicks, pNodeSecondAnim);
+		
+		aiQuaternion resultRotation;
+		aiQuaternion::Interpolate(resultRotation, RotationQ, pTranformQuat, FactorOfBlendAnim);
+		
+
+		glm::mat4 RotationM = glm::mat4(convertMat4(resultRotation.GetMatrix()));
+
+
+
+		aiVector3D Translation;
+		CalcInterpolatedPosition(Translation, SecondAnimationTimeTicks, pNodeSecondAnim);
+		glm::vec3 firstTranslationVec = glm::vec3(Translation.x, Translation.y, Translation.z);
+
+		glm::mat4 TranslationM(1.0f);
+		// vec3 Delta = pos2 - pos1; 
+		// Интерполированный vec3 = pos1 + Factor * Delta; 
+		glm::vec3 DeltaTranslation = glm::vec3(pTransformPosition.x, pTransformPosition.y, pTransformPosition.z) - firstTranslationVec;
+		glm::vec3 resultTranslation = firstTranslationVec + FactorOfBlendAnim * DeltaTranslation;
+
+		TranslationM = glm::translate(TranslationM, resultTranslation);
+
+		NodeTransformation = TranslationM * RotationM * ScalingM;
+	}
+	else if (pNodeFirstAnim && !pNodeSecondAnim) // [2]
+	{
+		aiMatrix4x4 pTransform = pNode->mTransformation;
+		aiVector3D pTranformScaling, pTransformPosition;
+		aiQuaternion pTranformQuat;
+		pTransform.Decompose(pTranformScaling, pTranformQuat, pTransformPosition);
+
+
+		// Расчёт интерполяции (pNodeSecondAnim) анимированного узла
+		aiVector3D Scaling;
+		CalcInterpolatedScaling(Scaling, FirstAnimationTimeTicks, pNodeFirstAnim);
+		glm::vec3 glmScaling(Scaling.x, Scaling.y, Scaling.z);
+
+		// float Factor = степень перехода от pos1 к pos2. Лежит между 0 и 1;
+		// vec3 Delta = pos2 - pos1; 
+		// Интерполированный vec3 = pos1 + Factor * Delta; 
+
+		// Интерполяция между анимированным и не анимированным положением
+
+		glm::vec3 DeltaScaling = glmScaling - glm::vec3(pTranformScaling.x, pTranformScaling.y, pTranformScaling.z);
+		glm::vec3 resultScaling = glmScaling + FactorOfBlendAnim * DeltaScaling;
+
+		glm::mat4 ScalingM(1.0f);
+		ScalingM = glm::scale(ScalingM, resultScaling);
+
+
+
+		aiQuaternion RotationQ;
+		CalcInterpolatedRotation(RotationQ, FirstAnimationTimeTicks, pNodeFirstAnim);
+
+		aiQuaternion resultRotation;
+		aiQuaternion::Interpolate(resultRotation, RotationQ, pTranformQuat, FactorOfBlendAnim);
+
+
+		glm::mat4 RotationM = glm::mat4(convertMat4(resultRotation.GetMatrix()));
+
+
+
+		aiVector3D Translation;
+		CalcInterpolatedPosition(Translation, FirstAnimationTimeTicks, pNodeFirstAnim);
+		glm::vec3 firstTranslationVec = glm::vec3(Translation.x, Translation.y, Translation.z);
+
+		glm::mat4 TranslationM(1.0f);
+		// vec3 Delta = pos2 - pos1; 
+		// Интерполированный vec3 = pos1 + Factor * Delta; 
+		glm::vec3 DeltaTranslation = glm::vec3(pTransformPosition.x, pTransformPosition.y, pTransformPosition.z) - firstTranslationVec;
+		glm::vec3 resultTranslation = firstTranslationVec + FactorOfBlendAnim * DeltaTranslation;
+
+		TranslationM = glm::translate(TranslationM, resultTranslation);
+
+		NodeTransformation = TranslationM * RotationM * ScalingM;
+	}
+
+
+	glm::mat4 GlobalTransformation = ParentTransform * NodeTransformation;
+
+	if (m_BoneNameToIndexMap.find(NodeName) != m_BoneNameToIndexMap.end()) {
+		unsigned int BoneIndex = m_BoneNameToIndexMap[NodeName];
+		m_BoneInfo[BoneIndex].FinalTransformation = GlobalTransformation * m_BoneInfo[BoneIndex].OffsetMatrix;
+	}
+
+	for (unsigned int i = 0; i < pNode->mNumChildren; i++) {
+		BlendAnimationReadNodeHierarchy(FirstAnimationTimeTicks, SecondAnimationTimeTicks, pNode->mChildren[i], GlobalTransformation, numOfFirstAnimation, numOfSecondAnimation, FactorOfBlendAnim);
+	}
 
 }
 
