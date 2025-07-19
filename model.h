@@ -44,7 +44,9 @@ public:
 
 	void Render(Shader shader);
 
-	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms);
+	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, int numOfAnimation);
+
+	int maxNumOfAnimations;
 	
 	static void printMatrix(glm::mat4 matrix);
 	static aiMatrix4x4 convertMat4(glm::mat4 glmMatrix)
@@ -168,6 +170,12 @@ public:
 
 		BoneInfo(const aiBone& pBone)
 		{
+			aiVector3D pScaling(1.0f);
+			aiVector3D pRotation(1.0f);
+			aiVector3D pPosition(1.0f);
+			ai_real rotationAngle(1.0f);
+
+
 			OffsetMatrix = convertMat4(pBone.mOffsetMatrix);
 			FinalTransformation = glm::mat4(1.0f);
 			name = pBone.mName.C_Str();
@@ -176,17 +184,11 @@ public:
 
 	std::vector<BoneInfo> m_BoneInfo;
 
-	void MultiplyMatrix(aiNode* node, aiMatrix4x4& matrix);
-
 	std::vector<NeedNode> nodeArray;
 
 private:
 
 #define MAX_NUM_BONES_PER_VERTEX 4
-
-	
-
-	void parseNode(aiNode* node);
 
 
 	struct VertexBoneData
@@ -269,6 +271,7 @@ private:
 	std::vector<BasicMeshEntry> m_Meshes;
 	std::vector<Texture> m_Textures;
 
+	
 
 	std::vector<glm::vec3> m_Positions;
 	std::vector<glm::vec3> m_Normals;
@@ -317,7 +320,7 @@ private:
 
 	unsigned int TextureFromFile(const char* path, const std::string& directory);
 
-//	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform);
+	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfAnimation);
 
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& NodeName);
 

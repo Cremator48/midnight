@@ -16,8 +16,6 @@
 
 #include <iomanip>
 
-
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -29,7 +27,6 @@ void processInput(GLFWwindow* window);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-int plusMatrix = 32;
 
 
 // Константы
@@ -43,10 +40,14 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 int glDisplayBoneIndex = 0;
 
+int numOfAnimation = 0;
+int maxNumOfAnimation = 0;
+
 int main()
 {
 	setlocale(LC_ALL, "Russian");
 
+	// Время старта программы в милисекундах
 	long long StartTimeMillis = 0;
 
 	StartTimeMillis = glfwGetTime() * 1000;
@@ -113,20 +114,11 @@ int main()
 	// 5. Привязка и указание данных для буфферов 
 	// 6. Настройка вершинных атрибутов
 	
-	// 
-	// 
-	// 
-	//   Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/man5wt.fbx_Scene.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	
-		
-	
-	
-	//	 Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/snake/snake2.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);
-	//	 Model ourModel("C:/Users/tyuri/Download/untitled.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);
-		 Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/simple_men (3).fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);
-	//	 Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/untitled.fbx", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-	
-	
+    Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/simple-man-with-3-anim-with-texture.gltf", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);	
+
+	maxNumOfAnimation = ourModel.maxNumOfAnimations;
+//	std::cout << "maxNumOfAnimation: " << maxNumOfAnimation << "\n";
 
 	// отрисовывать кадр при каждом обновлении экрана 
 	glfwSwapInterval(1);
@@ -138,6 +130,8 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	int firstFrame = 1;
+
+	
 
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
@@ -159,8 +153,9 @@ int main()
 
 		glm::mat4 model(1.0f);
 
-		model = glm::translate(model, glm::vec3(0.0f, -1.5f, 0.0f));
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, -1.0f, -1.0f));
+		model = glm::rotate(model, glm::radians(-180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 		
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
@@ -179,44 +174,22 @@ int main()
 
 		shader.setVec3("lightPos", lightPos);
 		
+		// Текущее время в милисекундах
 		long long CurrentTimeMillis = glfwGetTime() * 1000;
+		
+		// Текущее время в секундах
 		float AnimationTimeSec = ((float)(CurrentTimeMillis - StartTimeMillis)) / 1000.0f;
-
-//		std::cout << AnimationTimeSec << "\n";
+	//	std::cout << "AnimationTimeSec: " << AnimationTimeSec << "\n";
 
 		std::vector<glm::mat4> Transforms;
-		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms);
+		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms, numOfAnimation);
 
-		
 
 		for (int i = 0; i < Transforms.size(); i++)
 		{
 			shader.setMat4("gBones["+std::to_string(i)+"]", Transforms[i]);	
 		}
 	
-		if (firstFrame)
-		{
-
-			/*std::cout << "\nourModel.m_BoneNameToIndexMap\nNum of bones: " << ourModel.m_BoneNameToIndexMap.size() << "\n";
-			std::cout << "\nTransforms.size() = " << Transforms.size() << "\n";
-
-			for (auto& element : ourModel.m_BoneNameToIndexMap)
-			{
-				std::cout << element.first << " " << element.second << "\n";
-			}
-			
-			std::cout << "\nourModel.m_BoneInfo\nNum of bones: " << ourModel.m_BoneInfo.size() << "\n";
-			int iterator = 0;
-			for (auto& element : ourModel.m_BoneInfo)
-			{
-				std::cout << element.name << " " << iterator << "\n";
-				iterator++;
-			}
-*/
-
-		}
-		firstFrame = 0;
-
 		ourModel.Render(shader);
 
 		
@@ -301,16 +274,16 @@ float module(float a)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
+	if (key == GLFW_KEY_DOWN && action == GLFW_PRESS && numOfAnimation > 0)
 	{
-		plusMatrix = plusMatrix + 1;
-		std::cout << plusMatrix << "\n";
+		numOfAnimation = numOfAnimation - 1;
+	//	std::cout << numOfAnimation;
 	}
-		
-	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
+	if (key == GLFW_KEY_UP && action == GLFW_PRESS && numOfAnimation < maxNumOfAnimation-1)
 	{
-		plusMatrix = plusMatrix - 1;
-		std::cout << plusMatrix << "\n";
+		numOfAnimation = numOfAnimation + 1;
+	//	std::cout << numOfAnimation;
 	}
+	
 
 };
