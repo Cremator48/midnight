@@ -44,6 +44,8 @@ public:
 
 	void Render(Shader shader);
 
+	std::vector<float> TicksPerSecondVector, TimeInTicksVector, AnimationTimeTicksVector, firstFrameVector;
+
 	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, float factor);
 
 	int maxNumOfAnimations;
@@ -328,7 +330,7 @@ private:
 
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& NodeName);
 
-	void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim);
+	void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, const aiNodeAnim* pNodeAnim, const aiAnimation* pAnimation);
 
 	glm::mat4 m_GlobalInverseTransform;
 

@@ -87,7 +87,7 @@ int main()
 	}
 
 	
-	Shader shader("../midnight/shader.vs", "../midnight/shader.fs", NULL); // Шейдер
+	Shader shader("C:/Users/tyuri/Documents/GitHub/midnight/shader.vs", "C:/Users/tyuri/Documents/GitHub/midnight/shader.fs", NULL); // Шейдер
 	
 
 	// Класс Model будет содержать следующие приватные члены:
@@ -114,7 +114,7 @@ int main()
 	// 6. Настройка вершинных атрибутов
 	
 	
-    Model ourModel("C:/Users/tyuri/Documents/GitHub/res/models/1newTry/simple-man-with-6-anim-with-texture.gltf", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);	
+    Model ourModel("C:/Users/tyuri/Documents/GitHub/res/simple-man-with-6-anim-with-texture.gltf", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_PopulateArmatureData);	
 
 //	maxNumOfAnimation = ourModel.maxNumOfAnimations;
 //	std::cout << "maxNumOfAnimation: " << maxNumOfAnimation << "\n";
