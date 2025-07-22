@@ -27,8 +27,6 @@ void processInput(GLFWwindow* window);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-
-
 // Константы
 const unsigned int SCR_WIDTH = 1600;
 const unsigned int SCR_HEIGHT = 900;
@@ -40,6 +38,8 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 int glDisplayBoneIndex = 0;
 
+int numOfAnimation = 0;
+bool isKeyPressed = false;
 float FactorOfBlendAnim = 0.0f;
 
 int main()
@@ -135,6 +135,8 @@ int main()
 	// Цикл рендеринга
 	while (!glfwWindowShouldClose(window))
 	{
+
+		
 		// Логическая часть работы со временем для каждого кадра
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
@@ -146,7 +148,14 @@ int main()
 
 		
 		// Обработка ввода
+		
+		isKeyPressed = false;
 		processInput(window);
+
+		if (FactorOfBlendAnim > 0 && isKeyPressed == false)
+		{
+			FactorOfBlendAnim = FactorOfBlendAnim - 0.01f;
+		}
 
 		shader.use();
 
@@ -178,9 +187,10 @@ int main()
 		
 		// Текущее время в секундах
 		float AnimationTimeSec = ((float)(CurrentTimeMillis - StartTimeMillis)) / 1000.0f;
-	//	std::cout << "AnimationTimeSec: " << AnimationTimeSec << "\n";
 
 		std::vector<glm::mat4> Transforms;
+		ourModel.setKeyPressed(isKeyPressed);
+		ourModel.setAnimation(numOfAnimation);
 		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms, FactorOfBlendAnim);
 
 
@@ -228,18 +238,31 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && /*numOfAnimation > 0*/ FactorOfBlendAnim > 0)
-	{
-		FactorOfBlendAnim = FactorOfBlendAnim - 0.01f;
-		//	numOfAnimation = numOfAnimation - 1;
-		//	std::cout << numOfAnimation;
-	}
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && /*numOfAnimation < maxNumOfAnimation-1*/ FactorOfBlendAnim < 1)
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && FactorOfBlendAnim < 1)
 	{
 		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
-		//	numOfAnimation = numOfAnimation + 1;
-		//	std::cout << numOfAnimation;
+		isKeyPressed = true;
+		numOfAnimation = Model::ANIMATION_WALK;
 	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	{
+		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
+		isKeyPressed = true;
+		numOfAnimation = Model::ANIMATION_WALK_BACKWARD;
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	{
+		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
+		isKeyPressed = true;
+		numOfAnimation = Model::ANIMATION_LEFT_STRAFE_WALK;
+	}
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	{
+		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
+		isKeyPressed = true;
+		numOfAnimation = Model::ANIMATION_RIGHT_STRAFE_WALK;
+	}
+	
 }
 
 // glfw: всякий раз, когда изменяются размеры окна (пользователем или операционной системой), вызывается данная callback-функция

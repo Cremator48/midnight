@@ -40,16 +40,31 @@ public:
 		bool needOrNot;
 	};
 
+	enum NumOfAnimation
+	{
+		ANIMATION_DANCE,
+		ANIMATION_IDLE,
+		ANIMATION_LEFT_STRAFE_WALK,
+		ANIMATION_RIGHT_STRAFE_WALK,
+		ANIMATION_WALK,
+		ANIMATION_WALK_BACKWARD
+	};
+
 	~Model();
 
 	void Render(Shader shader);
 
 	std::vector<float> TicksPerSecondVector, TimeInTicksVector, AnimationTimeTicksVector, firstFrameVector;
-
+	
 	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, float factor);
 
-	int maxNumOfAnimations;
-	
+	int numOfCurrentAnimation = ANIMATION_IDLE;
+	bool isKeyPressed = false;
+
+	void setKeyPressed(bool keyPressed);
+
+	void setAnimation(int numAnimation);
+
 	static void printMatrix(glm::mat4 matrix);
 	static aiMatrix4x4 convertMat4(glm::mat4 glmMatrix)
 	{
