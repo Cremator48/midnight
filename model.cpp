@@ -469,17 +469,27 @@ void Model::GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Trans
 
 	for (int i = 0; i < pScene->mNumAnimations; i++)
 	{
-		TicksPerSecondVector[i] = (float)(pScene->mAnimations[i]->mTicksPerSecond != 0 ? pScene->mAnimations[i]->mTicksPerSecond : 25.0f);
-		//	TicksPerSecondVector[i] = 120.0f;
+	//	TicksPerSecondVector[i] = (float)(pScene->mAnimations[i]->mTicksPerSecond != 0 ? pScene->mAnimations[i]->mTicksPerSecond : 25.0f);
+		TicksPerSecondVector[i] = 120.0f;
 		TimeInTicksVector[i] = TimeInSeconds * TicksPerSecondVector[i];
 		firstFrameVector[i] = pScene->mAnimations[i]->mChannels[0]->mPositionKeys[0].mTime;
-		AnimationTimeTicksVector[i] = firstFrameVector[i] + fmod(TimeInTicksVector[i], (float)pScene->mAnimations[i]->mDuration - firstFrameVector[i]);
+		
+		float duration = (float)pScene->mAnimations[i]->mDuration;
+
+		if (i == ANIMATION_WALK)
+		{
+			AnimationTimeTicksVector[i] = fmod(TimeInTicksVector[i], duration);
+		}
+		else
+		{
+			AnimationTimeTicksVector[i] = firstFrameVector[i] + fmod(TimeInTicksVector[i], duration- firstFrameVector[i]);
+		}
 	}
 
 	//	ReadNodeHierarchy(AnimationTimeTicksVector[ANIMATION_IDLE], pScene->mRootNode, Identity, ANIMATION_IDLE);
 	
 
-	BlendAnimationReadNodeHierarchy(AnimationTimeTicksVector[ANIMATION_IDLE], AnimationTimeTicksVector[numOfCurrentAnimation], pScene->mRootNode, Identity, ANIMATION_IDLE, numOfCurrentAnimation, factor);
+	BlendAnimationReadNodeHierarchy(AnimationTimeTicksVector[ANIMATION_IDLE], AnimationTimeTicksVector[numOfCurrentAnimation], NULL, pScene->mRootNode, Identity, ANIMATION_IDLE, numOfCurrentAnimation, NULL, factor, NULL);
 
 	// Если кнопка движения нажата и удерживается то Factor каждый кадр увеличивается на 0.01;
 	// Если никакие кнопки не нажаты, то Factor уменьшается каждый кадр на 0.01, если Factor больше 0;
@@ -510,19 +520,33 @@ void Model::CalcInterpolatedScaling(aiVector3D& Out, float AnimationTimeTicks, c
 		return;
 	}
 
+	if (AnimationTimeTicks < pNodeAnim->mScalingKeys[0].mTime)
+	{
+		float DeltaTime = (float)pNodeAnim->mScalingKeys[0].mTime;
+		float Factor = AnimationTimeTicks / DeltaTime;
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		const aiVector3D& Start = pNodeAnim->mScalingKeys[pNodeAnim->mNumScalingKeys - 1].mValue;
+		const aiVector3D& End = pNodeAnim->mScalingKeys[0].mValue;
+		aiVector3D Delta = End - Start;
+		Out = Start + Factor * Delta;
+	}
+	else
+	{
+		unsigned int ScalingIndex = FindScaling(AnimationTimeTicks, pNodeAnim);
+		unsigned int NextScalingIndex = ScalingIndex + 1;
+		assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+		float t1 = (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime;
+		float t2 = (float)pNodeAnim->mScalingKeys[NextScalingIndex].mTime;
+		float DeltaTime = t2 - t1;
+		float Factor = (AnimationTimeTicks - (float)t1) / DeltaTime;
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
+		const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
+		aiVector3D Delta = End - Start;
+		Out = Start + Factor * Delta;
+	}
 
-	unsigned int ScalingIndex = FindScaling(AnimationTimeTicks, pNodeAnim);
-	unsigned int NextScalingIndex = ScalingIndex + 1;
-	assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
-	float t1 = (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime;
-	float t2 = (float)pNodeAnim->mScalingKeys[NextScalingIndex].mTime;
-	float DeltaTime = t2 - t1;
-	float Factor = (AnimationTimeTicks - (float)t1) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
-	const aiVector3D& Start = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-	const aiVector3D& End = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-	aiVector3D Delta = End - Start;
-	Out = Start + Factor * Delta;
+	
 
 }
 
@@ -566,20 +590,33 @@ void CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTimeTicks, const
 		return;
 	}
 
+	if (AnimationTimeTicks < pNodeAnim->mRotationKeys[0].mTime)
+	{
+		float DeltaTime = (float)pNodeAnim->mRotationKeys[0].mTime;
+		float Factor = AnimationTimeTicks / DeltaTime;
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[pNodeAnim->mNumRotationKeys-1].mValue;
+		const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[0].mValue;
+		aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
+		Out.Normalize();
+	}
+	else
+	{
+		unsigned int RotationIndex = findRotation(AnimationTimeTicks, pNodeAnim);
+		unsigned int NextRotationIndex = RotationIndex + 1;
+		assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
+		float t1 = (float)pNodeAnim->mRotationKeys[RotationIndex].mTime;
+		float t2 = (float)pNodeAnim->mRotationKeys[NextRotationIndex].mTime;
+		float DeltaTime = t2 - t1;
+		float Factor = (AnimationTimeTicks - t1) / DeltaTime;
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
+		const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
+		aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
+		Out.Normalize();
+	}
 
-	unsigned int RotationIndex = findRotation(AnimationTimeTicks, pNodeAnim);
-	unsigned int NextRotationIndex = RotationIndex + 1;
-	assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-	float t1 = (float)pNodeAnim->mRotationKeys[RotationIndex].mTime;
-	float t2 = (float)pNodeAnim->mRotationKeys[NextRotationIndex].mTime;
-	float DeltaTime = t2 - t1;
-	float Factor = (AnimationTimeTicks - t1) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
-	const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-	const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
-	aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
-	Out.Normalize();
-
+	
 
 }
 
@@ -602,22 +639,31 @@ void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTimeTicks, const a
 		return;
 	}
 
-
-
-	unsigned int PositionIndex = FindPosition(AnimationTimeTicks, pNodeAnim);
-	unsigned int NextPositionIndex = PositionIndex + 1;
-	assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
-	float t1 = (float)pNodeAnim->mPositionKeys[PositionIndex].mTime;
-	float t2 = (float)pNodeAnim->mPositionKeys[NextPositionIndex].mTime;
-	float DeltaTime = t2 - t1;
-	float Factor = (AnimationTimeTicks - t1) / DeltaTime;
-	assert(Factor >= 0.0f && Factor <= 1.0f);
-	const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-	const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-	aiVector3D Delta = End - Start;
-	Out = Start + Factor * Delta;
-
-
+	if (AnimationTimeTicks < pNodeAnim->mPositionKeys[0].mTime)
+	{
+		float DeltaTime = pNodeAnim->mPositionKeys[0].mTime;
+		float Factor = AnimationTimeTicks / DeltaTime;
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		const aiVector3D& Start = pNodeAnim->mPositionKeys[pNodeAnim->mNumPositionKeys - 1].mValue;
+		const aiVector3D& End = pNodeAnim->mPositionKeys[0].mValue;
+		aiVector3D Delta = End - Start;
+		Out = Start + Factor * Delta;
+	}
+	else
+	{
+		unsigned int PositionIndex = FindPosition(AnimationTimeTicks, pNodeAnim);
+		unsigned int NextPositionIndex = PositionIndex + 1;
+		assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
+		float t1 = (float)pNodeAnim->mPositionKeys[PositionIndex].mTime;
+		float t2 = (float)pNodeAnim->mPositionKeys[NextPositionIndex].mTime;
+		float DeltaTime = t2 - t1;
+		float Factor = (AnimationTimeTicks - t1) / DeltaTime;
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		const aiVector3D& Start = pNodeAnim->mPositionKeys[PositionIndex].mValue;
+		const aiVector3D& End = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
+		aiVector3D Delta = End - Start;
+		Out = Start + Factor * Delta;
+	}
 }
 
 
@@ -674,13 +720,20 @@ void Model::ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, con
 
 }
 
-void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float SecondAnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfFirstAnimation, int numOfSecondAnimation, float FactorOfBlendAnim)
+
+void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float SecondAnimationTimeTicks, float ThirdAnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfFirstAnimation, int numOfSecondAnimation, int numOfThirdAnim, float FactorOne, float FactorTwo)
 {
 	std::string NodeName(pNode->mName.data);
 
 	const aiAnimation* pFirstAnimation = pScene->mAnimations[numOfFirstAnimation];
 
 	const aiAnimation* pSecondAnimation = pScene->mAnimations[numOfSecondAnimation];
+	const aiAnimation* pThirdAnimation;
+
+	if (ThirdAnimationTimeTicks != NULL && numOfThirdAnim != NULL)
+	{
+		pThirdAnimation = pScene->mAnimations[numOfThirdAnim];
+	}
 
 	glm::mat4 NodeTransformation = convertMat4(pNode->mTransformation);
 
@@ -689,6 +742,8 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 
 	// Вторая анимация этого конкретного узла
 	const aiNodeAnim* pNodeSecondAnim = FindNodeAnim(pSecondAnimation, NodeName);
+
+
 
 	// Возможны 3 варианта:
 	// [1] Обе анимации содержат ключи анимции для этого узла;
@@ -710,7 +765,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 
 
 		glm::vec3 DeltaScaling = glmSecondScaling - glmFirstScaling;
-		glm::vec3 ResultScaling = glmFirstScaling + FactorOfBlendAnim * DeltaScaling;
+		glm::vec3 ResultScaling = glmFirstScaling + FactorOne * DeltaScaling;
 
 		glm::mat4 ScalingM(1.0f);
 		ScalingM = glm::scale(ScalingM, ResultScaling);
@@ -720,7 +775,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		CalcInterpolatedRotation(secondRotationQ, SecondAnimationTimeTicks, pNodeSecondAnim);
 
 
-		aiQuaternion::Interpolate(resultRotationQ, firstRotationQ, secondRotationQ, FactorOfBlendAnim);
+		aiQuaternion::Interpolate(resultRotationQ, firstRotationQ, secondRotationQ, FactorOne);
 
 		glm::mat4 RotationM = glm::mat4(convertMat4(resultRotationQ.GetMatrix()));
 
@@ -737,7 +792,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		firstTranslationGLM = glm::vec3(firstTranslation.x, firstTranslation.y, firstTranslation.z);
 		secondTranslationGLM = glm::vec3(secondTranslation.x, secondTranslation.y, secondTranslation.z);
 		glm::vec3 DeltaTranslation = secondTranslationGLM - firstTranslationGLM;
-		resultTranslation = firstTranslationGLM + FactorOfBlendAnim * DeltaTranslation;
+		resultTranslation = firstTranslationGLM + FactorOne * DeltaTranslation;
 
 		glm::mat4 TranslationM(1.0f);
 		TranslationM = glm::translate(TranslationM, resultTranslation);
@@ -764,7 +819,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		// Интерполяция между анимированным и не анимированным положением
 
 		glm::vec3 DeltaScaling = glmScaling - glm::vec3(pTranformScaling.x, pTranformScaling.y, pTranformScaling.z);
-		glm::vec3 resultScaling = glmScaling + FactorOfBlendAnim * DeltaScaling;
+		glm::vec3 resultScaling = glmScaling + FactorOne * DeltaScaling;
 
 		glm::mat4 ScalingM(1.0f);
 		ScalingM = glm::scale(ScalingM, resultScaling);
@@ -775,7 +830,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		CalcInterpolatedRotation(RotationQ, SecondAnimationTimeTicks, pNodeSecondAnim);
 
 		aiQuaternion resultRotation;
-		aiQuaternion::Interpolate(resultRotation, RotationQ, pTranformQuat, FactorOfBlendAnim);
+		aiQuaternion::Interpolate(resultRotation, RotationQ, pTranformQuat, FactorOne);
 
 
 		glm::mat4 RotationM = glm::mat4(convertMat4(resultRotation.GetMatrix()));
@@ -790,7 +845,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		// vec3 Delta = pos2 - pos1; 
 		// Интерполированный vec3 = pos1 + Factor * Delta; 
 		glm::vec3 DeltaTranslation = glm::vec3(pTransformPosition.x, pTransformPosition.y, pTransformPosition.z) - firstTranslationVec;
-		glm::vec3 resultTranslation = firstTranslationVec + FactorOfBlendAnim * DeltaTranslation;
+		glm::vec3 resultTranslation = firstTranslationVec + FactorOne * DeltaTranslation;
 
 		TranslationM = glm::translate(TranslationM, resultTranslation);
 
@@ -816,7 +871,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		// Интерполяция между анимированным и не анимированным положением
 
 		glm::vec3 DeltaScaling = glmScaling - glm::vec3(pTranformScaling.x, pTranformScaling.y, pTranformScaling.z);
-		glm::vec3 resultScaling = glmScaling + FactorOfBlendAnim * DeltaScaling;
+		glm::vec3 resultScaling = glmScaling + FactorOne * DeltaScaling;
 
 		glm::mat4 ScalingM(1.0f);
 		ScalingM = glm::scale(ScalingM, resultScaling);
@@ -827,7 +882,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		CalcInterpolatedRotation(RotationQ, FirstAnimationTimeTicks, pNodeFirstAnim);
 
 		aiQuaternion resultRotation;
-		aiQuaternion::Interpolate(resultRotation, RotationQ, pTranformQuat, FactorOfBlendAnim);
+		aiQuaternion::Interpolate(resultRotation, RotationQ, pTranformQuat, FactorOne);
 
 
 		glm::mat4 RotationM = glm::mat4(convertMat4(resultRotation.GetMatrix()));
@@ -842,7 +897,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 		// vec3 Delta = pos2 - pos1; 
 		// Интерполированный vec3 = pos1 + Factor * Delta; 
 		glm::vec3 DeltaTranslation = glm::vec3(pTransformPosition.x, pTransformPosition.y, pTransformPosition.z) - firstTranslationVec;
-		glm::vec3 resultTranslation = firstTranslationVec + FactorOfBlendAnim * DeltaTranslation;
+		glm::vec3 resultTranslation = firstTranslationVec + FactorOne * DeltaTranslation;
 
 		TranslationM = glm::translate(TranslationM, resultTranslation);
 
@@ -858,7 +913,7 @@ void Model::BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float
 	}
 
 	for (unsigned int i = 0; i < pNode->mNumChildren; i++) {
-		BlendAnimationReadNodeHierarchy(FirstAnimationTimeTicks, SecondAnimationTimeTicks, pNode->mChildren[i], GlobalTransformation, numOfFirstAnimation, numOfSecondAnimation, FactorOfBlendAnim);
+		BlendAnimationReadNodeHierarchy(FirstAnimationTimeTicks, SecondAnimationTimeTicks, NULL, pNode->mChildren[i], GlobalTransformation, numOfFirstAnimation, numOfSecondAnimation, NULL, FactorOne, NULL);
 	}
 
 }

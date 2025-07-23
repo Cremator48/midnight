@@ -52,6 +52,8 @@ public:
 
 	~Model();
 
+	
+
 	void Render(Shader shader);
 
 	std::vector<float> TicksPerSecondVector, TimeInTicksVector, AnimationTimeTicksVector, firstFrameVector;
@@ -341,7 +343,7 @@ private:
 
 	void ReadNodeHierarchy(float AnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfAnimation);
 
-	void BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float SecondAnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfFirstAnimation, int numOfSecondAnimation, float FactorOfBlendAnim);
+	void BlendAnimationReadNodeHierarchy(float FirstAnimationTimeTicks, float SecondAnimationTimeTicks, float ThirdAnimationTimeTicks, const aiNode* pNode, const glm::mat4& ParentTransform, int numOfFirstAnimation, int numOfSecondAnimation, int numOfThirdAnim, float FactorOne, float FactorTwo);
 
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& NodeName);
 
