@@ -20,6 +20,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+void inputOfWalk(GLFWwindow* window, int forwardOrBackwardAnimation, int LeftOrRightStrafe, int ForwardOrBackwardKey, int LeftOrRightKey);
 
 void processInput(GLFWwindow* window);
 
@@ -38,9 +39,12 @@ float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 int glDisplayBoneIndex = 0;
 
-int numOfAnimation = 0;
-bool isKeyPressed = false;
-float FactorOfBlendAnim = 0.0f;
+int numOfForwardAnimation = 0;
+int numOfSideAnimation = 0;
+bool forwardKeyPressed = false;
+bool strafeKeyPressed = false;
+float FactorOfBlendAnimOne = 0.0f;
+float FactorOfBlendAnimTwo = 0.0f;
 
 int main()
 {
@@ -149,13 +153,24 @@ int main()
 		
 		// ќбработка ввода
 		
-		isKeyPressed = false;
+		forwardKeyPressed = false;
+		strafeKeyPressed = false;
+		
 		processInput(window);
 
-		if (FactorOfBlendAnim > 0 && isKeyPressed == false)
+		if (strafeKeyPressed == false && FactorOfBlendAnimTwo > 0.0f)
 		{
-			FactorOfBlendAnim = FactorOfBlendAnim - 0.01f;
+			FactorOfBlendAnimTwo = FactorOfBlendAnimTwo - 0.01f;
 		}
+		if (forwardKeyPressed == false && FactorOfBlendAnimOne > 0.0f)
+		{
+			FactorOfBlendAnimOne = FactorOfBlendAnimOne - 0.01f;
+		}
+		if (FactorOfBlendAnimOne < 0)
+			FactorOfBlendAnimOne = 0;
+
+		if (FactorOfBlendAnimTwo < 0)
+			FactorOfBlendAnimTwo = 0.0f;
 
 		shader.use();
 
@@ -189,10 +204,13 @@ int main()
 		float AnimationTimeSec = ((float)(CurrentTimeMillis - StartTimeMillis)) / 1000.0f;
 
 		std::vector<glm::mat4> Transforms;
-		ourModel.setKeyPressed(isKeyPressed);
-		ourModel.setAnimation(numOfAnimation);
-		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms, FactorOfBlendAnim);
+		ourModel.setKeyPressed(forwardKeyPressed, strafeKeyPressed);
+		ourModel.setForwardAnimation(numOfForwardAnimation);
+		ourModel.setSideAnimation(numOfSideAnimation);
+		ourModel.GetBoneTransforms(AnimationTimeSec, Transforms, FactorOfBlendAnimOne, FactorOfBlendAnimTwo);
 
+		std::cout << "FactorOfBlendAnimTwo " << FactorOfBlendAnimTwo << "\n";
+		std::cout << "FactorOfBlendAnimOne " << FactorOfBlendAnimOne << "\n";
 
 		for (int i = 0; i < Transforms.size(); i++)
 		{
@@ -238,31 +256,63 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(DOWN, deltaTime);
 
-	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	inputOfWalk(window, Model::ANIMATION_WALK, Model::ANIMATION_LEFT_STRAFE_WALK, GLFW_KEY_UP, GLFW_KEY_LEFT);
+	inputOfWalk(window, Model::ANIMATION_WALK_BACKWARD, Model::ANIMATION_LEFT_STRAFE_WALK, GLFW_KEY_DOWN, GLFW_KEY_LEFT);
+
+	inputOfWalk(window, Model::ANIMATION_WALK, Model::ANIMATION_RIGHT_STRAFE_WALK, GLFW_KEY_UP, GLFW_KEY_RIGHT);
+	inputOfWalk(window, Model::ANIMATION_WALK_BACKWARD, Model::ANIMATION_RIGHT_STRAFE_WALK, GLFW_KEY_DOWN, GLFW_KEY_RIGHT);
+}
+
+void inputOfWalk(GLFWwindow* window, int forwardOrBackwardAnimation, int LeftOrRightStrafe, int ForwardOrBackwardKey, int LeftOrRightKey)
+{
+	if (glfwGetKey(window, ForwardOrBackwardKey) == GLFW_PRESS && glfwGetKey(window, LeftOrRightKey) != GLFW_PRESS && FactorOfBlendAnimOne < 1)
 	{
-		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
-		isKeyPressed = true;
-		numOfAnimation = Model::ANIMATION_WALK;
+		FactorOfBlendAnimOne = FactorOfBlendAnimOne + 0.01f;
+		forwardKeyPressed = true;
+		numOfForwardAnimation = forwardOrBackwardAnimation;
 	}
-	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	if (glfwGetKey(window, LeftOrRightKey) == GLFW_PRESS && glfwGetKey(window, ForwardOrBackwardKey) != GLFW_PRESS && FactorOfBlendAnimTwo < 1)
 	{
-		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
-		isKeyPressed = true;
-		numOfAnimation = Model::ANIMATION_WALK_BACKWARD;
+		FactorOfBlendAnimTwo = FactorOfBlendAnimTwo + 0.01f;
+		strafeKeyPressed = true;
+		numOfSideAnimation = LeftOrRightStrafe;
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	if (glfwGetKey(window, LeftOrRightKey) == GLFW_PRESS && glfwGetKey(window, ForwardOrBackwardKey) == GLFW_PRESS && FactorOfBlendAnimTwo < 0.5 && FactorOfBlendAnimOne < 0.5)
 	{
-		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
-		isKeyPressed = true;
-		numOfAnimation = Model::ANIMATION_LEFT_STRAFE_WALK;
+		FactorOfBlendAnimOne = FactorOfBlendAnimOne + 0.01f;
+		FactorOfBlendAnimTwo = FactorOfBlendAnimTwo + 0.01f;
+		forwardKeyPressed = true;
+		strafeKeyPressed = true;
+		numOfForwardAnimation = forwardOrBackwardAnimation;
+		numOfSideAnimation = LeftOrRightStrafe;
 	}
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && FactorOfBlendAnim < 1)
+	if (glfwGetKey(window, LeftOrRightKey) == GLFW_PRESS && glfwGetKey(window, ForwardOrBackwardKey) == GLFW_PRESS && FactorOfBlendAnimTwo > 0.5 && FactorOfBlendAnimOne < 0.5)
 	{
-		FactorOfBlendAnim = FactorOfBlendAnim + 0.01f;
-		isKeyPressed = true;
-		numOfAnimation = Model::ANIMATION_RIGHT_STRAFE_WALK;
+		FactorOfBlendAnimOne = FactorOfBlendAnimOne + 0.01f;
+		FactorOfBlendAnimTwo = FactorOfBlendAnimTwo - 0.01f;
+		forwardKeyPressed = true;
+		strafeKeyPressed = true;
+		numOfForwardAnimation = forwardOrBackwardAnimation;
+		numOfSideAnimation = LeftOrRightStrafe;
 	}
-	
+	if (glfwGetKey(window, LeftOrRightKey) == GLFW_PRESS && glfwGetKey(window, ForwardOrBackwardKey) == GLFW_PRESS && FactorOfBlendAnimTwo < 0.5 && FactorOfBlendAnimOne > 0.5)
+	{
+		FactorOfBlendAnimOne = FactorOfBlendAnimOne - 0.01f;
+		FactorOfBlendAnimTwo = FactorOfBlendAnimTwo + 0.01f;
+		forwardKeyPressed = true;
+		strafeKeyPressed = true;
+		numOfForwardAnimation = forwardOrBackwardAnimation;
+		numOfSideAnimation = LeftOrRightStrafe;
+	}
+	if (glfwGetKey(window, LeftOrRightKey) == GLFW_PRESS && glfwGetKey(window, ForwardOrBackwardKey) == GLFW_PRESS && FactorOfBlendAnimTwo > 0.5 && FactorOfBlendAnimOne > 0.5)
+	{
+		FactorOfBlendAnimOne = FactorOfBlendAnimOne - 0.01f;
+		FactorOfBlendAnimTwo = FactorOfBlendAnimTwo - 0.01f;
+		forwardKeyPressed = true;
+		strafeKeyPressed = true;
+		numOfForwardAnimation = forwardOrBackwardAnimation;
+		numOfSideAnimation = LeftOrRightStrafe;
+	}
 }
 
 // glfw: вс€кий раз, когда измен€ютс€ размеры окна (пользователем или операционной системой), вызываетс€ данна€ callback-функци€

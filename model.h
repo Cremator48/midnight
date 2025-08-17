@@ -58,14 +58,17 @@ public:
 
 	std::vector<float> TicksPerSecondVector, TimeInTicksVector, AnimationTimeTicksVector, firstFrameVector;
 	
-	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, float factor);
+	void GetBoneTransforms(float TimeInSeconds, std::vector<glm::mat4>& Transforms, float factorOne, float factorTwo);
 
-	int numOfCurrentAnimation = ANIMATION_IDLE;
-	bool isKeyPressed = false;
+	int forwardAnimation = ANIMATION_WALK;
+	int sideAnimation = ANIMATION_RIGHT_STRAFE_WALK;
+	bool forwardKeyPressed = false;
+	bool strafeKeyPressed = false;
 
-	void setKeyPressed(bool keyPressed);
+	void setKeyPressed(bool forwardKeyPressed, bool strafeKeyPressed);
 
-	void setAnimation(int numAnimation);
+	void setForwardAnimation(int numAnimation);
+	void setSideAnimation(int numAnimation);
 
 	static void printMatrix(glm::mat4 matrix);
 	static aiMatrix4x4 convertMat4(glm::mat4 glmMatrix)
